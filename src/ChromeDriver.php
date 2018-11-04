@@ -664,7 +664,7 @@ JS;
         for (i = 0; i < l; i++) {
             var field = fields.item(i);
             if (field.form === element.form) {
-                if (field.value === expected_value) {
+                if (field.value == expected_value) {
                     field.checked = true;
                     field.click();
                 } else {
