@@ -388,6 +388,20 @@ JS;
     }
 
     /**
+     * Returns all cookies.
+     *
+     * @return array
+     *
+     * @throws DriverException                  When the operation cannot be done
+     */
+    public function getCookies()
+    {
+        $result = $this->page->send('Network.getCookies');
+
+        return $result['cookies'];
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getStatusCode()
