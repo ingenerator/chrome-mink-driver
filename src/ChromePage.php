@@ -172,7 +172,7 @@ class ChromePage extends DevToolsConnection
                     }
                     break;
                 default:
-                    continue;
+                    break;
             }
         }
 
