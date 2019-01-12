@@ -1360,18 +1360,18 @@ JS;
      * @param bool   $printBackground
      * @param int    $scale
      * @param float  $paperWidth
-     * @param int    $paperHeight
-     * @param int    $marginTop
-     * @param int    $marginBottom
-     * @param int    $marginLeft
-     * @param int    $marginRight
+     * @param float  $paperHeight
+     * @param float  $marginTop
+     * @param float  $marginBottom
+     * @param float  $marginLeft
+     * @param float  $marginRight
      * @param string $pageRanges
      * @param bool   $ignoreInvalidPageRanges
      * @param string $headerTemplate
      * @param string $footerTemplate
      * @throws \Exception
      */
-    public function printToPDF($filename, $landscape = false, $displayHeaderFooter = false, $printBackground = false, $scale = 1, $paperWidth = 8.5, $paperHeight = 11, $marginTop = 1, $marginBottom = 1, $marginLeft = 1, $marginRight = 1, $pageRanges = '', $ignoreInvalidPageRanges = false, $headerTemplate = '', $footerTemplate = '')
+    public function printToPDF($filename, $landscape = false, $displayHeaderFooter = false, $printBackground = false, $scale = 1, $paperWidth = 8.5, $paperHeight = 11.0, $marginTop = 1.0, $marginBottom = 1.0, $marginLeft = 1.0, $marginRight = 1.0, $pageRanges = '', $ignoreInvalidPageRanges = false, $headerTemplate = '', $footerTemplate = '')
     {
         if (false === $this->browser->isHeadless()) {
             throw new \RuntimeException('Page.printToPDF is only available in headless mode.');
