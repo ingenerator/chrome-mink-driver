@@ -1301,6 +1301,10 @@ JS;
                     if ($value['type'] === 'number' && !array_key_exists('value', $value) &&
                         array_key_exists('unserializableValue', $value) && $value['unserializableValue'] === '-0') {
                         $return[$property['name']] = 0;
+                    }
+                    elseif ($value['type'] === 'function' && !array_key_exists('value', $value) &&
+                        array_key_exists('description', $value)) {
+                        $return[$property['name']] = $value['description'];
                     } elseif (!array_key_exists('value', $value)) {
                         throw new DriverException('Property value not set');
                     } else {
