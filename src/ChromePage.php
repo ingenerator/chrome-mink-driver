@@ -154,6 +154,7 @@ class ChromePage extends DevToolsConnection
                 case 'Page.frameStartedLoading':
                     $this->page_ready = false;
                     break;
+                case 'Page.navigatedWithinDocument':
                 case 'Page.frameStoppedLoading':
                     $this->page_ready = true;
                     break;
