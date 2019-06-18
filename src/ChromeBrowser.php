@@ -38,14 +38,19 @@ class ChromeBrowser extends DevToolsConnection
      */
     public function start()
     {
-        $versionInfo = json_decode($this->http_client->get($this->http_uri . '/json/version'));
+        $response = $this->http_client->get($this->http_uri . '/json/version');
+        $versionInfo = json_decode($response);
 
         // Detect if Chrome is running
         if (null === $versionInfo) {
+            $jsonError = json_last_error_msg();
+
             throw new \RuntimeException(
                 sprintf(
-                    'Could not fetch version information from %s. Please check if Chrome is running. Please see docs/troubleshooting.md if Chrome crashed unexpected.',
-                    $this->http_uri.'/json/version'
+                    "Could not fetch version information from %s. Please check if Chrome is running. Please see docs/troubleshooting.md if Chrome crashed unexpected. \nJson Error: %s. \nResponse was: %s",
+                    $this->http_uri.'/json/version',
+                    $jsonError,
+                    $response
                 )
             );
         }
