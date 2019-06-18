@@ -434,6 +434,28 @@ JS;
         $screenshot = $this->page->send('Page.captureScreenshot');
         return base64_decode($screenshot['data']);
     }
+    
+    /**
+     * Capture a screenshot of the entire page.
+     *
+     * @return string screenshot of MIME type image/* depending
+     *                on driver (e.g., image/png, image/jpeg)
+     *
+     * @throws DriverException                  When the operation cannot be done
+     */
+    public function getFullPageScreenshot()
+    {
+        $metrics = $this->page->send('Page.getLayoutMetrics');
+        $width = ceil($metrics['contentSize']['width']);
+        $height = ceil($metrics['contentSize']['height']);
+
+        // Overwrite clip for full page at all times.
+        $clip = ['x' => 0, 'y' => 0, 'width' => $width, 'height' => $height, 'scale' => 1];
+        $this->page->send('Emulation.setDeviceMetricsOverride', ['mobile'=> false, 'deviceScaleFactor' => 1, 'width' => $width, 'height' => $height,]);
+
+        $screenshot = $this->page->send('Page.captureScreenshot', ['clip' => $clip]);
+        return base64_decode($screenshot['data']);
+    }
 
     /**
      * {@inheritdoc}
