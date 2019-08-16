@@ -691,6 +691,7 @@ JS;
     var expected_value = $json_value;
     var result = 0;
     var trigger_change = true;
+    var last_value = element.value;
     element.scrollIntoViewIfNeeded();
     element.focus();
     if (element.tagName == 'INPUT' && element.type == 'radio') {
@@ -731,9 +732,15 @@ JS;
         element.value = expected_value
     }
     if (trigger_change) {
-        var change = document.createEvent("Events");
-        change.initEvent("change", true, true);
-        element.dispatchEvent(change)
+        var event = new Event("change", { target: element, bubbles: true });
+        // React 15
+        event.simulated = true;
+        // React 16
+        var tracker = element._valueTracker;
+        if (tracker) {
+            tracker.setValue(last_value);
+        }
+        element.dispatchEvent(event);
     }
     element.blur();
     null
