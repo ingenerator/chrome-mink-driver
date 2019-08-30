@@ -418,7 +418,11 @@ JS;
      */
     public function getContent()
     {
-        return $this->getHtml('//html');
+        try {
+            return $this->getHtml('//html');
+        } catch (ElementNotFoundException $e) {
+            return '';
+        }
     }
 
     /**
@@ -434,7 +438,7 @@ JS;
         $screenshot = $this->page->send('Page.captureScreenshot');
         return base64_decode($screenshot['data']);
     }
-    
+
     /**
      * Capture a screenshot of the entire page.
      *
