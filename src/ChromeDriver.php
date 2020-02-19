@@ -426,7 +426,7 @@ JS;
     }
 
     /**
-     * Capture a screenshot of the current window.
+     * Capture a fullscreen screenshot of the current window.
      *
      * @return string screenshot of MIME type image/* depending
      *                on driver (e.g., image/png, image/jpeg)
@@ -435,7 +435,11 @@ JS;
      */
     public function getScreenshot()
     {
-        $screenshot = $this->page->send('Page.captureScreenshot');
+        $metrics = $this->page->send('Page.getLayoutMetrics');
+        $weight = ceil($metrics['contentSize']['width']);
+        $height = ceil($metrics['contentSize']['height']);
+        $this->setVisibleSize($weight, $height);
+        $screenshot = $this->page->send('Page.captureScreenshot', ['clip' =>  ['x' => 0, 'y' => 0, 'width' => $weight, 'height' => $height, 'scale' => 1]]);
         return base64_decode($screenshot['data']);
     }
 
