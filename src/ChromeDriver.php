@@ -734,7 +734,7 @@ JS;
             }
         }
     } else if (element.tagName == 'INPUT' && element.type == 'file') {
-    } else if (element.tagName == 'INPUT' && (element.type == 'password' || element.type == 'tel' || element.type == 'email' || element.type == 'url')) {
+    } else if (element.tagName == 'INPUT' && (element.type == 'password' || element.type == 'tel' || element.type == 'email')) {
         element.value = $text_value;
     } else {
         element.value = expected_value
