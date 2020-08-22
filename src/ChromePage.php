@@ -14,6 +14,8 @@ class ChromePage extends DevToolsConnection
     private $has_javascript_dialog = false;
     /** @var array https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Response */
     private $response = null;
+    /** @var array */
+    private $console_messages = [];
 
     public function connect($url = null)
     {
@@ -23,6 +25,7 @@ class ChromePage extends DevToolsConnection
         $this->send('Network.enable');
         $this->send('Animation.enable');
         $this->send('Animation.setPlaybackRate', ['playbackRate' => 100000]);
+        $this->send('Console.enable');
     }
 
     public function reset()
@@ -99,6 +102,26 @@ class ChromePage extends DevToolsConnection
         return array_reverse($tabs, true);
     }
 
+  /**
+   * Get all console messages since start or last clear.
+   *
+   * @return array
+   */
+    public function getConsoleMessages()
+    {
+        return $this->console_messages;
+    }
+
+    /**
+     * Clear the stored console messages.
+     *
+     * @return array
+     */
+    public function clearConsoleMessages()
+    {
+        $this->console_messages = [];
+    }
+
     private function waitForHttpResponse()
     {
         if (null === $this->response) {
@@ -171,6 +194,9 @@ class ChromePage extends DevToolsConnection
                         $this->send('Security.handleCertificateError', ['eventId' => $data['params']['eventId'], 'action' => 'continue']);
                         $this->page_ready = false;
                     }
+                    break;
+                case 'Console.messageAdded':
+                    $this->console_messages[] = $data['params']['message'];
                     break;
                 default:
                     break;

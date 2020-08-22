@@ -1139,6 +1139,24 @@ JS;
         $this->waitForDom();
     }
 
+    /**
+     * Get all console messages since start or last clear.
+     *
+     * @return array
+     */
+    public function getConsoleMessages() {
+        return $this->page->getConsoleMessages();
+    }
+
+    /**
+     * Clear the sotred console messages.
+     *
+     * @return array
+     */
+    public function clearConsoleMessages() {
+        return $this->page->getConsoleMessages();
+    }
+
     protected function deleteAllCookies()
     {
         $this->page->send('Network.clearBrowserCookies');
