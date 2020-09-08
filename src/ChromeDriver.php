@@ -1325,6 +1325,32 @@ JS;
         return [ceil($left), ceil($top), floor($width), floor($height)];
     }
 
+  /**
+   * @param string $xpath
+   * @return array
+   * @throws ElementNotFoundException
+   */
+  public function getEventListenersForXpath($xpath) {
+    $xpath = addslashes($xpath);
+    $xpath = str_replace("\n", '\\n', $xpath);
+    // Query the element first to obtain the Remote.ObjectID which is required
+    // parameter when obtaining the list of registered event listeners.
+    $script = <<<JS
+        document.evaluate("{$xpath}", {$this->document}, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+JS;
+    $result = $this->runScript($script)['result'];
+    if ($result['type'] != 'object' || $result['subtype'] != 'node') {
+      throw new ElementNotFoundException($this, NULL, 'xpath', $xpath);
+    }
+
+    // Get list of event listeners registered.
+    $result = $this->page->send('DOMDebugger.getEventListeners', [
+      'objectId' => $result['objectId'],
+    ]);
+
+    return $result['listeners'];
+  }
+
     /**
      * @param $script
      * @return null
