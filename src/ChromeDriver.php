@@ -647,7 +647,7 @@ JS;
      */
     public function setValue($xpath, $value)
     {
-        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
+        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
         if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
             $this->setNonTextTypeValue($xpath, $value);
         } else {
@@ -734,7 +734,7 @@ JS;
             }
         }
     } else if (element.tagName == 'INPUT' && element.type == 'file') {
-    } else if (element.tagName == 'INPUT' && (element.type == 'password' || element.type == 'tel' || element.type == 'email' || element.type == 'url')) {
+    } else if (element.tagName == 'INPUT' && (element.type == 'password' || element.type == 'tel' || element.type == 'email')) {
         element.value = $text_value;
     } else {
         element.value = expected_value
