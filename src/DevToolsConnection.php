@@ -38,7 +38,7 @@ abstract class DevToolsConnection
     {
         return $this->url;
     }
-    
+
     public function connect($url = null)
     {
         $url = $url == null ? $this->url : $url;
@@ -57,7 +57,7 @@ abstract class DevToolsConnection
     /**
      * @param string $command
      * @param array $parameters
-     * @return null|string
+     * @return null|string|string[][]
      * @throws \Exception
      */
     public function send($command, array $parameters = [])
@@ -89,6 +89,10 @@ abstract class DevToolsConnection
                 $response = $this->client->receive();
             } catch (ConnectionException $exception) {
                 $message = $exception->getMessage();
+                if (false !== strpos($message, 'Empty read; connection dead?')) {
+                    throw $exception;
+                }
+
                 $state = json_decode(substr($message, strpos($message, '{')), true);
                 throw new StreamReadException($state['eof'], $state['timed_out'], $state['blocked']);
             }
