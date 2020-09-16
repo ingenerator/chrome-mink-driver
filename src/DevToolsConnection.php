@@ -24,7 +24,7 @@ abstract class DevToolsConnection
 
     public function canDevToolsConnectionBeEstablished()
     {
-        $url = 'http://127.0.0.1:9222/json/version';
+        $url = $this->getUrl() . "/json/version";
         $c = curl_init($url);
         curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
