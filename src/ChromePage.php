@@ -1,4 +1,5 @@
 <?php
+
 namespace DMore\ChromeDriver;
 
 use Behat\Mink\Exception\DriverException;
@@ -6,15 +7,25 @@ use WebSocket\ConnectionException;
 
 class ChromePage extends DevToolsConnection
 {
-    /** @var array */
+    /**
+     * @var array
+     */
     private $pending_requests = [];
-    /** @var bool */
+    /**
+     * @var bool
+     */
     private $page_ready = true;
-    /** @var bool */
+    /**
+     * @var bool
+     */
     private $has_javascript_dialog = false;
-    /** @var array https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Response */
+    /**
+     * @var array https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Response
+     */
     private $response = null;
-    /** @var array */
+    /**
+     * @var array
+     */
     private $console_messages = [];
 
     public function connect($url = null)
@@ -36,9 +47,11 @@ class ChromePage extends DevToolsConnection
     public function visit($url)
     {
         if (count($this->pending_requests) > 0) {
-            $this->waitFor(function () {
-                return count($this->pending_requests) == 0;
-            });
+            $this->waitFor(
+                function () {
+                    return count($this->pending_requests) == 0;
+                }
+            );
         }
         $this->response = null;
         $this->page_ready = false;
@@ -55,9 +68,11 @@ class ChromePage extends DevToolsConnection
     {
         if (!$this->page_ready) {
             try {
-                $this->waitFor(function () {
-                    return $this->page_ready;
-                });
+                $this->waitFor(
+                    function () {
+                        return $this->page_ready;
+                    }
+                );
             } catch (StreamReadException $exception) {
                 if ($exception->isTimedOut() && false === $this->canDevToolsConnectionBeEstablished()) {
                     throw new \RuntimeException(
@@ -102,11 +117,11 @@ class ChromePage extends DevToolsConnection
         return array_reverse($tabs, true);
     }
 
-  /**
-   * Get all console messages since start or last clear.
-   *
-   * @return array
-   */
+    /**
+     * Get all console messages since start or last clear.
+     *
+     * @return array
+     */
     public function getConsoleMessages()
     {
         return $this->console_messages;
@@ -135,14 +150,16 @@ class ChromePage extends DevToolsConnection
                 return;
             }
 
-            $this->waitFor(function () {
-                return null !== $this->response && count($this->pending_requests) == 0;
-            });
+            $this->waitFor(
+                function () {
+                    return null !== $this->response && count($this->pending_requests) == 0;
+                }
+            );
         }
     }
 
     /**
-     * @param array $data
+     * @param  array $data
      * @return bool
      * @throws DriverException
      */
@@ -191,7 +208,10 @@ class ChromePage extends DevToolsConnection
                     break;
                 case 'Security.certificateError':
                     if (isset($data['params']['eventId'])) {
-                        $this->send('Security.handleCertificateError', ['eventId' => $data['params']['eventId'], 'action' => 'continue']);
+                        $this->send(
+                            'Security.handleCertificateError',
+                            ['eventId' => $data['params']['eventId'], 'action' => 'continue']
+                        );
                         $this->page_ready = false;
                     }
                     break;

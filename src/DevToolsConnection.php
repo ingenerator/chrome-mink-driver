@@ -1,4 +1,5 @@
 <?php
+
 namespace DMore\ChromeDriver;
 
 use Behat\Mink\Exception\DriverException;
@@ -7,13 +8,21 @@ use WebSocket\ConnectionException;
 
 abstract class DevToolsConnection
 {
-    /** @var Client */
+    /**
+     * @var Client
+     */
     private $client;
-    /** @var int */
+    /**
+     * @var int
+     */
     private $command_id = 1;
-    /** @var string */
+    /**
+     * @var string
+     */
     private $url;
-    /** @var int|null */
+    /**
+     * @var int|null
+     */
     private $socket_timeout;
 
     public function __construct($url, $socket_timeout = null)
@@ -42,7 +51,7 @@ abstract class DevToolsConnection
     public function connect($url = null)
     {
         $url = $url == null ? $this->url : $url;
-        $options = ['fragment_size' => 2000000]; # Chrome closes the connection if a message is sent in fragments
+        $options = ['fragment_size' => 2000000]; // Chrome closes the connection if a message is sent in fragments
         if (is_numeric($this->socket_timeout) && $this->socket_timeout > 0) {
             $options['timeout'] = (int) $this->socket_timeout;
         }
@@ -55,8 +64,8 @@ abstract class DevToolsConnection
     }
 
     /**
-     * @param string $command
-     * @param array $parameters
+     * @param  string $command
+     * @param  array  $parameters
      * @return null|string|string[][]
      * @throws \Exception
      */
@@ -70,9 +79,11 @@ abstract class DevToolsConnection
 
         $this->client->send(json_encode($payload));
 
-        $data = $this->waitFor(function ($data) use ($payload) {
-            return array_key_exists('id', $data) && $data['id'] == $payload['id'];
-        });
+        $data = $this->waitFor(
+            function ($data) use ($payload) {
+                return array_key_exists('id', $data) && $data['id'] == $payload['id'];
+            }
+        );
 
         if (isset($data['result'])) {
             return $data['result'];
@@ -102,8 +113,9 @@ abstract class DevToolsConnection
             $data = json_decode($response, true);
 
             if (array_key_exists('error', $data)) {
-                $message = isset($data['error']['data']) ? $data['error']['message'] . '. ' . $data['error']['data'] : $data['error']['message'];
-                throw new DriverException($message , $data['error']['code']);
+                $message = isset($data['error']['data']) ?
+                    $data['error']['message'] . '. ' . $data['error']['data'] : $data['error']['message'];
+                throw new DriverException($message, $data['error']['code']);
             }
 
             if ($this->processResponse($data)) {
@@ -119,7 +131,7 @@ abstract class DevToolsConnection
     }
 
     /**
-     * @param array $data
+     * @param  array $data
      * @return bool
      */
     abstract protected function processResponse(array $data);
