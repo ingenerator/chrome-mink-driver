@@ -17,6 +17,14 @@ stages:
     - vendor/bin/phpunit --colors=always
   needs: []
 
+GrumPHP:
+  image: composer:latest
+  stage: lint
+  tags: [docker]
+  script:
+    - composer require phpro/grumphp ergebnis/composer-normalize --prefer-dist --ansi --no-progress --sort-packages
+    - vendor/bin/grumphp run -n
+
 PHP CodeSniffer:
   image: composer:latest
   stage: lint
