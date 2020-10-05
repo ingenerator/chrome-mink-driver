@@ -134,13 +134,23 @@ class ChromeDriver extends CoreDriver
     }
 
     /**
-     * Checks whether driver is started.
+     * Flag for whether driver is started.
      *
      * @return Boolean
      */
     public function isStarted()
     {
         return $this->is_started;
+    }
+
+    /**
+     * Ensure the driver is started.
+     */
+    public function ensureStarted()
+    {
+        if (!$this->isStarted()) {
+            $this->start();
+        }
     }
 
     /**
@@ -159,6 +169,7 @@ class ChromeDriver extends CoreDriver
      */
     public function stop()
     {
+        $this->ensureStarted();
         try {
             $this->reset();
             foreach ($this->getWindowNames() as $key => $window_id) {
@@ -186,7 +197,9 @@ class ChromeDriver extends CoreDriver
      * to enforce it.
      *
      * Once reset, the driver should be ready to visit a page.
+     *
      * Calling any action before visiting a page is an undefined behavior.
+     *
      * The only supported method calls on a fresh driver are
      * - visit()
      * - setRequestHeader()
@@ -198,6 +211,7 @@ class ChromeDriver extends CoreDriver
      */
     public function reset()
     {
+        $this->ensureStarted();
         $this->document = 'document';
         $this->deleteAllCookies();
         $this->connectToWindow($this->main_window);
@@ -215,6 +229,7 @@ class ChromeDriver extends CoreDriver
      */
     public function visit($url)
     {
+        $this->ensureStarted();
         $this->page->visit($url);
         $this->document = 'document';
         $this->page->waitForLoad();
@@ -274,6 +289,7 @@ class ChromeDriver extends CoreDriver
      */
     public function setBasicAuth($user, $password)
     {
+        $this->ensureStarted();
         if ($user === false) {
             $this->unsetRequestHeader('Authorization');
         } else {
@@ -357,6 +373,7 @@ JS;
      */
     public function setRequestHeader($name, $value)
     {
+        $this->ensureStarted();
         $this->request_headers[$name] = $value;
         $this->sendRequestHeaders();
     }
