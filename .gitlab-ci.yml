@@ -3,6 +3,7 @@ variables:
   CHROME_DEBUG_URL: http://localhost:9222
 
 stages:
+  - lint
   - test
 
 .test_template: &test_template
@@ -14,6 +15,15 @@ stages:
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
     - vendor/bin/phpunit --colors=always
+  needs: []
+
+PHP CodeSniffer:
+  image: composer:latest
+  stage: lint
+  tags: [docker]
+  script:
+    - composer install -o --prefer-dist --ansi --no-progress
+    - php vendor/bin/phpcs -v --error-severity=1 --warning-severity=8 --extensions=php
 
 PHP 5.6:
   <<: *test_template
