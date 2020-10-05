@@ -1,6 +1,35 @@
 Changelog
 =========
 
+## 2.8.0
+
+* Improved support for Behat 1.8.x, fixes to CI (#94, #104)
+* Re-throw dead connection exceptions (!88)
+* Support `setValue()` on 'url' input types (!87)
+* Full page and screen screenshot functionality (!72, !79)
+* Improve exception message on Chrome error (!71)
+* Handle experimental Page.navigatedWithinDocument (!70)
+* Updated Event dispatching for input change to add support for React components (!74)
+* Support non-HTML responses (!78)
+* Support multiple file attachments (!83)
+* Correctly use configured DevTools connection URL (#93, !90)
+* Support obtaining event listeners for elements (!91)
+* Support clearing and retrieval of messages from `console.log` (#97, !86)
+
+## 2.7.0
+
+* Support `setValue()` on 'number' and 'url' input types (!87)
+* Replace deprecated Chrome Devtools method with setIgnoreCertificateErrors
+* Correct types for `printToPDF()` method (!68)
+* Add function handling for evaluated JS return values (#67, !67)
+* PHP7.3 fixes and test coverage (!66)
+* Add ext-json to requirements in composer.json (!64)
+* Set Host header for compatibility with Chrome 66+ (!63)
+* Non-strict comparison of radio button values (!62)
+* Add method to retrieve all cookies (!61)
+* Replace deprecated method to ignore SSL certificate errors (#57, !60)
+* Remove `event.key` code to fix conflict with non-printable chars (!57)
+
 ## 2.6.4
 
 * Fixed StreamReadException not being caught when browser fails to respond on stop
