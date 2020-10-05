@@ -25,14 +25,6 @@ GrumPHP:
     - composer require phpro/grumphp ergebnis/composer-normalize --prefer-dist --ansi --no-progress --sort-packages
     - vendor/bin/grumphp run -n
 
-PHP CodeSniffer:
-  image: composer:latest
-  stage: lint
-  tags: [docker]
-  script:
-    - composer install -o --prefer-dist --ansi --no-progress
-    - php vendor/bin/phpcs -v --error-severity=1 --warning-severity=8 --extensions=php
-
 PHP 5.6:
   <<: *test_template
   image: registry.gitlab.com/dmore/docker-chrome-headless:5.6
