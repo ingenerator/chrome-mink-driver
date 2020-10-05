@@ -91,13 +91,23 @@ class ChromeDriver extends CoreDriver
     }
 
     /**
-     * Checks whether driver is started.
+     * Flag for whether driver is started.
      *
      * @return Boolean
      */
     public function isStarted()
     {
         return $this->is_started;
+    }
+
+    /**
+     * Ensure the driver is started.
+     */
+    public function ensureStarted()
+    {
+        if (!$this->isStarted()) {
+            $this->start();
+        }
     }
 
     /**
@@ -116,6 +126,7 @@ class ChromeDriver extends CoreDriver
      */
     public function stop()
     {
+        $this->ensureStarted();
         try {
             $this->reset();
             foreach ($this->getWindowNames() as $key => $window_id) {
@@ -143,7 +154,9 @@ class ChromeDriver extends CoreDriver
      * to enforce it.
      *
      * Once reset, the driver should be ready to visit a page.
+     *
      * Calling any action before visiting a page is an undefined behavior.
+     *
      * The only supported method calls on a fresh driver are
      * - visit()
      * - setRequestHeader()
@@ -155,6 +168,7 @@ class ChromeDriver extends CoreDriver
      */
     public function reset()
     {
+        $this->ensureStarted();
         $this->document = 'document';
         $this->deleteAllCookies();
         $this->connectToWindow($this->main_window);
@@ -172,6 +186,7 @@ class ChromeDriver extends CoreDriver
      */
     public function visit($url)
     {
+        $this->ensureStarted();
         $this->page->visit($url);
         $this->document = 'document';
         $this->page->waitForLoad();
@@ -231,6 +246,7 @@ class ChromeDriver extends CoreDriver
      */
     public function setBasicAuth($user, $password)
     {
+        $this->ensureStarted();
         if ($user === false) {
             $this->unsetRequestHeader('Authorization');
         } else {
@@ -314,6 +330,7 @@ JS;
      */
     public function setRequestHeader($name, $value)
     {
+        $this->ensureStarted();
         $this->request_headers[$name] = $value;
         $this->sendRequestHeaders();
     }
@@ -647,7 +664,7 @@ JS;
      */
     public function setValue($xpath, $value)
     {
-        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
+        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
         if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
             $this->setNonTextTypeValue($xpath, $value);
         } else {
@@ -734,7 +751,7 @@ JS;
             }
         }
     } else if (element.tagName == 'INPUT' && element.type == 'file') {
-    } else if (element.tagName == 'INPUT' && (element.type == 'password' || element.type == 'tel' || element.type == 'email' || element.type == 'url')) {
+    } else if (element.tagName == 'INPUT' && (element.type == 'password' || element.type == 'tel' || element.type == 'email')) {
         element.value = $text_value;
     } else {
         element.value = expected_value
@@ -1139,6 +1156,24 @@ JS;
         $this->waitForDom();
     }
 
+    /**
+     * Get all console messages since start or last clear.
+     *
+     * @return array
+     */
+    public function getConsoleMessages() {
+        return $this->page->getConsoleMessages();
+    }
+
+    /**
+     * Clear the sotred console messages.
+     *
+     * @return array
+     */
+    public function clearConsoleMessages() {
+        return $this->page->getConsoleMessages();
+    }
+
     protected function deleteAllCookies()
     {
         $this->page->send('Network.clearBrowserCookies');
@@ -1306,6 +1341,32 @@ JS;
         list($left, $top, $width, $height) = $this->evaluateScript($expression);
         return [ceil($left), ceil($top), floor($width), floor($height)];
     }
+
+  /**
+   * @param string $xpath
+   * @return array
+   * @throws ElementNotFoundException
+   */
+  public function getEventListenersForXpath($xpath) {
+    $xpath = addslashes($xpath);
+    $xpath = str_replace("\n", '\\n', $xpath);
+    // Query the element first to obtain the Remote.ObjectID which is required
+    // parameter when obtaining the list of registered event listeners.
+    $script = <<<JS
+        document.evaluate("{$xpath}", {$this->document}, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+JS;
+    $result = $this->runScript($script)['result'];
+    if ($result['type'] != 'object' || $result['subtype'] != 'node') {
+      throw new ElementNotFoundException($this, NULL, 'xpath', $xpath);
+    }
+
+    // Get list of event listeners registered.
+    $result = $this->page->send('DOMDebugger.getEventListeners', [
+      'objectId' => $result['objectId'],
+    ]);
+
+    return $result['listeners'];
+  }
 
     /**
      * @param $script
