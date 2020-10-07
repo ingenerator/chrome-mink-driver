@@ -3,18 +3,18 @@ Changelog
 
 ## 2.8.0
 
-* Improved support for Behat 1.8.x, fixes to CI (#94, #104)
+* Improved support for Behat 1.8.x, fixes to CI (!93, #94, #104)
+* Support obtaining event listeners for elements (!91)
+* Correctly use configured DevTools connection URL (!90, #93)
 * Re-throw dead connection exceptions (!88)
 * Support `setValue()` on 'url' input types (!87)
+* Support clearing and retrieval of messages from `console.log` (!86, #97)
+* Support multiple file attachments (!83)
+* Support non-HTML responses (!78)
+* Updated Event dispatching for input change to add support for React components (!74)
 * Full page and screen screenshot functionality (!72, !79)
 * Improve exception message on Chrome error (!71)
 * Handle experimental Page.navigatedWithinDocument (!70)
-* Updated Event dispatching for input change to add support for React components (!74)
-* Support non-HTML responses (!78)
-* Support multiple file attachments (!83)
-* Correctly use configured DevTools connection URL (#93, !90)
-* Support obtaining event listeners for elements (!91)
-* Support clearing and retrieval of messages from `console.log` (#97, !86)
 
 ## 2.7.0
 
