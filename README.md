@@ -10,7 +10,7 @@ It communicates directly with Google Chrome over HTTP and WebSockets, which allo
 ## Installation:
 
 ```bash
-composer require dmore/chrome-mink-driver
+composer require ingenerator/chrome-mink-driver
 ```
 
 ## Requirements:
