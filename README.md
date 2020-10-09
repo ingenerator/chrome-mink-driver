@@ -14,7 +14,7 @@ The same suite running against chrome 58 with xvfb and selenium takes ~60 minute
 ## Installation:
 
 ```bash
-composer require dmore/chrome-mink-driver
+composer require ingenerator/chrome-mink-driver
 ```
 
 ## Requirements:
