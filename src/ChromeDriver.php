@@ -693,7 +693,7 @@ JS;
             usleep(5000);
 
             try {
-                $this->triggerEvent($xpath, 'change');
+                $this->runScriptOnXpathElement($xpath, 'if (element === document.activeElement) {element.blur();}');
             } catch (ElementNotFoundException $e) {
                 // Ignore, sometimes input elements can get hidden after they are modified.
                 // For example, editing a title inline and sending a newline character at the end
