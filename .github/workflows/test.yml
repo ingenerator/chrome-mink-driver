@@ -1,0 +1,64 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+      # Only mainline branches, features etc are covered on the pull_request trigger
+      - '*.x'
+  pull_request:
+
+jobs:
+  run-tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version:
+          - '7.2'
+        dependencies:
+          - 'default'
+
+    steps:
+      - name: Run Chrome headless background service
+        run: |
+          /usr/bin/docker run -d -it --rm --name chrome-headless -p 9222:9222 \
+          -v $(pwd):/code \
+          -e DOCROOT=/code/vendor/mink/driver-testsuite/web-fixtures \
+          registry.gitlab.com/dmore/docker-chrome-headless:7.2 bash
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php_version }}
+          tools: composer
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get composer cache
+        id: composer-cache
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.dependencies }}
+
+      - name: Install composer dependencies
+        env:
+          DEPENDENCIES: ${{ matrix.dependencies }}
+        run: |
+          if [ $DEPENDENCIES == 'lowest' ]
+          then
+            composer update --prefer-lowest --no-interaction --no-suggest --no-progress
+          else
+            composer install --no-interaction --no-suggest --no-progress
+          fi
+
+      - name: Run unit tests
+        run: |
+          docker exec chrome-headless vendor/bin/phpunit --colors=always
