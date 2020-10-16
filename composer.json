@@ -21,6 +21,7 @@
       "dmore/chrome-mink-driver": "*"
     },
     "require": {
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
