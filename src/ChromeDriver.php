@@ -126,7 +126,6 @@ class ChromeDriver extends CoreDriver
      */
     public function stop()
     {
-        $this->ensureStarted();
         try {
             $this->reset();
             foreach ($this->getWindowNames() as $key => $window_id) {
