@@ -108,8 +108,6 @@ class ChromePage extends DevToolsConnection
 
     /**
      * Clear the stored console messages.
-     *
-     * @return array
      */
     public function clearConsoleMessages()
     {
