@@ -1160,17 +1160,17 @@ JS;
      *
      * @return array
      */
-    public function getConsoleMessages() {
+    public function getConsoleMessages()
+    {
         return $this->page->getConsoleMessages();
     }
 
     /**
-     * Clear the sotred console messages.
-     *
-     * @return array
+     * Clear the console messages.
      */
-    public function clearConsoleMessages() {
-        return $this->page->getConsoleMessages();
+    public function clearConsoleMessages()
+    {
+        $this->page->clearConsoleMessages();
     }
 
     protected function deleteAllCookies()
