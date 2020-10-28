@@ -3,6 +3,53 @@ Changelog
 
 ## Unreleased
 
+## 2.7.0.8 (CUSTOM INGENERATOR RELEASE) (2023-08-09)
+
+* Bring in selected changes from upstream package to fix various minor bugs, new test requirements from the core mink
+  driver testsuite, and PHP 8.2 support - see https://github.com/ingenerator/chrome-mink-driver/pull/16
+
+* Advertise supported php versions and run tests on php8.2
+
+* Switch from textalk/websocket to the more-maintained fork phrity/websocket.
+
+## 2.7.0.7 (CUSTOM INGENERATOR RELEASE) (2022-10-31)
+
+* Bring in selected changes from upstream package to reintroduce CI & fix support for PHP 8.1. Note the change from
+  urlencode to rawurlencode when setting cookies through the driver (I don't think we actually do this).
+
+## 2.7.0.6 (CUSTOM INGENERATOR RELEASE) (2022-02-23)
+
+* Don't fake the timestamps on click events - resolves issues with javascript frameworks ignoring events due to
+  incorrect timestamps.
+
+## 2.7.0.5 (CUSTOM INGENERATOR RELEASE) (2021-11-25)
+
+* Update handling of ConnectionException to handle the change to how textalk/websocket provides the stream metadata
+  since v1.5.0 - it no longer json-encodes the stream status in the exception message.
+
+## 2.7.0.4 (CUSTOM INGENERATOR RELEASE) (2021-11-25)
+
+* Add debugging output to try and understand why we have started getting fatal `Trying to access array offset on value
+  of type null` in some cases following a ConnectionException.
+
+## 2.7.0.3 (CUSTOM INGENERATOR RELEASE) (2021-10-12)
+
+* Fix PHP8 deprecation warning as optional constructor args can't be before required ones
+
+## 2.7.0.2 (CUSTOM INGENERATOR RELEASE) (2020-10-29)
+
+* [BREAKING] Rewrite how native dialogs (alert, prompt, confirm, beforeunload) are handled. You must now
+  register a callback *in advance* to handle any dialog that the browser shows. If you do not explicitly
+  handle the dialog, an UnexpectedJavascriptDialogException will be thrown.
+  https://github.com/ingenerator/chrome-mink-driver/pull/4
+
+## 2.7.0.1 (CUSTOM INGENERATOR RELEASE) (2020-10-16)
+
+* Fix change event not bubbling after input value set
+  https://github.com/ingenerator/chrome-mink-driver/pull/3
+
+## Unreleased
+
 * Test using [zenika/alpine-chrome](https://github.com/Zenika/alpine-chrome) instead of custom build(s) (#155)
 * Fix returned value of `isTextTypeInput` (#149)
 * Session reset should close non-main windows (#152, !178)
