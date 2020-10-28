@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## Unreleased
+
+* [BREAKING] Rewrite how native dialogs (alert, prompt, confirm, beforeunload) are handled. You must now 
+  register a callback *in advance* to handle any dialog that the browser shows. If you do not explicitly
+  handle the dialog, an UnexpectedJavascriptDialogException will be thrown. 
+
 ## 2.6.4
 
 * Fixed StreamReadException not being caught when browser fails to respond on stop

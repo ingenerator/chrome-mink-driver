@@ -1089,7 +1089,7 @@ JS;
                 break;
             }
             usleep(10000);
-        } while (!$this->page->hasJavascriptDialog());
+        } while (TRUE);
         return (bool)$result;
     }
 
@@ -1144,16 +1144,41 @@ JS;
         $this->runScriptOnXpathElement($xpath, 'element.submit()', 'form');
     }
 
-    public function acceptAlert($text = '')
+    /**
+     * Register a handler for browser native dialogs (alert, prompt, etc)
+     *
+     * Browser-native dialogs are synchronous and block all javascript execution, which can cause
+     * unexpected and hard-to-trace failures in the driver while they are open.
+     *
+     * Therefore, you *must* pre-register a handler for any native dialogs you expect to be
+     * triggered during a scenario. Any dialogs that are not matched by the handler (or if a handler
+     * has not been registered) will be immediately dismissed and cause an
+     * UnexpectedJavascriptDialogException.
+     *
+     * Usage:
+     *
+     *   function whenIDoSomething() {
+     *     $got_dialog = FALSE;
+     *     $driver->registerJavascriptDialogHandler(
+     *       function ($dialog_params) use ( & $got_dialog) {
+     *         if ($dialog_params['type'] !== 'alert') {
+     *           throw new \UnexpectedValueException('only expected an alert!');
+     *         }
+     *         $got_dialog = $dialog_params;
+     *         return ['accept' => TRUE];
+     *       }
+     *     );
+     *     $session->click('Open the pod bay doors, HAL');
+     *     $session->wait('dave.hasSeenAlert()'); // some custom condition your code sets after alert closed
+     *     Assert::assertSame('I\'m sorry Dave. I'm afraid I can't do that', $got_dialog['message']);
+     *   }
+     *
+     *
+     * @param callable $handler
+     */
+    public function registerJavascriptDialogHandler(callable $handler)
     {
-        $this->page->send('Page.handleJavaScriptDialog', ['accept' => true, 'promptText' => $text]);
-        $this->waitForDom();
-    }
-
-    public function dismissAlert()
-    {
-        $this->page->send('Page.handleJavaScriptDialog', ['accept' => false]);
-        $this->waitForDom();
+        $this->page->registerJavascriptDialogHandler($handler);
     }
 
     /**
@@ -1447,10 +1472,8 @@ JS;
 
     protected function waitForDom()
     {
-        if (!$this->page->hasJavascriptDialog()) {
-            $this->wait($this->domWaitTimeout, 'document.readyState == "complete"');
-            $this->page->waitForLoad();
-        }
+        $this->wait($this->domWaitTimeout, 'document.readyState == "complete"');
+        $this->page->waitForLoad();
     }
 
     /**

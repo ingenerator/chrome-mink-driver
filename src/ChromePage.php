@@ -10,12 +10,12 @@ class ChromePage extends DevToolsConnection
     private $pending_requests = [];
     /** @var bool */
     private $page_ready = true;
-    /** @var bool */
-    private $has_javascript_dialog = false;
     /** @var array https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Response */
     private $response = null;
     /** @var array */
     private $console_messages = [];
+    /** @var callable */
+    private $javascript_dialog_handler;
 
     public function connect($url = null)
     {
@@ -30,7 +30,8 @@ class ChromePage extends DevToolsConnection
 
     public function reset()
     {
-        $this->response = null;
+        $this->response                  = null;
+        $this->javascript_dialog_handler = null;
     }
 
     public function visit($url)
@@ -80,15 +81,8 @@ class ChromePage extends DevToolsConnection
     public function getResponse()
     {
         $this->waitForHttpResponse();
-        return $this->response;
-    }
 
-    /**
-     * @return boolean
-     */
-    public function hasJavascriptDialog()
-    {
-        return $this->has_javascript_dialog;
+        return $this->response;
     }
 
     public function getTabs()
@@ -151,10 +145,10 @@ class ChromePage extends DevToolsConnection
         if (array_key_exists('method', $data)) {
             switch ($data['method']) {
                 case 'Page.javascriptDialogOpening':
-                    $this->has_javascript_dialog = true;
-                    return true;
+                    $this->processJavascriptDialog($data);
+                    break;
                 case 'Page.javascriptDialogClosed':
-                    $this->has_javascript_dialog = false;
+                    // Nothing specific to do here, just ignore it
                     break;
                 case 'Network.requestWillBeSent':
                     if ($data['params']['type'] == 'Document') {
@@ -203,6 +197,67 @@ class ChromePage extends DevToolsConnection
             }
         }
 
-        return false;
+        return FALSE;
     }
+
+    protected function processJavascriptDialog(array $data)
+    {
+        try {
+            $handler = $this->javascript_dialog_handler
+                ?: function () {
+                    throw new \UnexpectedValueException(
+                        'No javascript dialog handler was registered'
+                    );
+                };
+            $outcome = $handler($data['params']);
+            if ( ! isset($outcome['accept'])) {
+                throw new \InvalidArgumentException(
+                    'javascript dialog handlers must return an `accept` property'
+                );
+            }
+        } catch (\Throwable $e) {
+            $outcome = [
+                // Default behaviour for a `beforeunload` should be to accept it so the page can
+                // navigate.
+                // For all others it should be to cancel (if possible) to prevent unexpected further
+                // executions.
+                'accept' => $data['params']['type'] === 'beforeunload' ? TRUE : FALSE,
+                'error'  => $e
+            ];
+        }
+
+        $this->send(
+            'Page.handleJavaScriptDialog',
+            [
+                'accept'     => $outcome['accept'] ?? $default_accept,
+                'promptText' => $outcome['promptText'] ?? ''
+            ]
+        );
+
+        // Note: we don't currently wait for the dialog to be closed - this should in theory be the
+        // very next operation but there's a risk that recursively waiting for it here might mean
+        // we consume packets from the websocket that something above us in the stack is waiting
+        // for. It should be safe to assume it will close before the browser does anything else
+        // interesting, so we can treat sending close as a synchronous / successful operation...?
+
+        if ($outcome['error'] ?? NULL) {
+            throw new UnexpectedJavascriptDialogException(
+                $data['params'],
+                $outcome['error']
+            );
+        }
+    }
+
+    /**
+     * Register a handler for javascript dialogs (will be reset for each scenario)
+     *
+     * @param callable $handler
+     *
+     * @see \DMore\ChromeDriver\ChromeDriver::registerJavascriptDialogHandler()
+     */
+    public function registerJavascriptDialogHandler(callable $handler)
+    {
+        $this->javascript_dialog_handler = $handler;
+    }
+
 }
