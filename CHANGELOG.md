@@ -1,6 +1,20 @@
 Changelog
 =========
 
+## Unreleased
+
+## 2.7.0.2 (CUSTOM INGENERATOR RELEASE) (2020-10-29)
+
+* [BREAKING] Rewrite how native dialogs (alert, prompt, confirm, beforeunload) are handled. You must now 
+  register a callback *in advance* to handle any dialog that the browser shows. If you do not explicitly
+  handle the dialog, an UnexpectedJavascriptDialogException will be thrown.
+  https://github.com/ingenerator/chrome-mink-driver/pull/4
+
+## 2.7.0.1 (CUSTOM INGENERATOR RELEASE) (2020-10-16)
+
+* Fix change event not bubbling after input value set
+  https://github.com/ingenerator/chrome-mink-driver/pull/3
+
 ## 2.6.4
 
 * Fixed StreamReadException not being caught when browser fails to respond on stop
