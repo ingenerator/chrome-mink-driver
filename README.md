@@ -1,3 +1,13 @@
+FORKED PROJECT: VERSIONING STRATEGY
+===================================
+
+This is a (possibly temporary) fork of the original dmore/chrome-mink-driver package with some custom additions. To
+avoid complicating version constraints, our releases will track upstream versions, using point releases to mark our
+additions. Therefore **we do not follow semantic versioning**. A version 2.7.0.2 means it's our second modification to
+the upstream 2.7.0. It may well include breaking changes from both 2.7.0 and 2.7.0.1. We consider this acceptable
+because this is test code - by definition any problems it causes are guaranteed to show up during testing before you
+merge the new version to your project.
+
 Chrome Mink Driver
 ==================
 
