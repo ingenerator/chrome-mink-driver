@@ -14,8 +14,14 @@ stages:
     - bin/wait-for-chrome.sh
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
-    - vendor/bin/phpunit --colors=always
+    - vendor/bin/phpunit --colors=always --log-junit junit.xml
   needs: []
+  artifacts:
+    paths:
+      - junit.xml
+    reports:
+      junit:
+        - junit.xml
 
 GrumPHP:
   image: composer:2.0.8
