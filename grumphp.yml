@@ -4,4 +4,5 @@ grumphp:
         composer_normalize: ~
         phpcs:
             standard: PSR12
-        securitychecker:
+        securitychecker_enlightn:
+            run_always: false
