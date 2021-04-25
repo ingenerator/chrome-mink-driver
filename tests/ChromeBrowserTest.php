@@ -6,7 +6,7 @@ use DMore\ChromeDriver\ChromeBrowser as Browser;
 use DMore\ChromeDriver\HttpClient;
 use PHPUnit\Framework\TestCase;
 
-class ChromeBrowser extends TestCase
+class ChromeBrowserTest extends TestCase
 {
     public function testInformativeExceptionIfChromeConnectionFailed()
     {
