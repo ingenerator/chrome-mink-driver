@@ -2,6 +2,7 @@
     "name": "dmore/chrome-mink-driver",
     "type": "library",
     "description": "Mink driver for controlling chrome without selenium",
+    "homepage": "https://gitlab.com/DMore/chrome-mink-driver",
     "license": "MIT",
     "authors": [
         {
@@ -42,5 +43,8 @@
             "url": "https://github.com/adorin/driver-testsuite.git"
         }
     ],
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "support": {
+        "issues": "https://gitlab.com/DMore/chrome-mink-driver/-/issues"
+    }
 }
