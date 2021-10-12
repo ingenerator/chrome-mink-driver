@@ -3,6 +3,10 @@ Changelog
 
 ## Unreleased
 
+## 2.7.0.3 (CUSTOM INGENERATOR RELEASE) (2021-10-12)
+
+* Fix PHP8 deprecation warning as optional constructor args can't be before required ones
+
 ## 2.7.0.2 (CUSTOM INGENERATOR RELEASE) (2020-10-29)
 
 * [BREAKING] Rewrite how native dialogs (alert, prompt, confirm, beforeunload) are handled. You must now 

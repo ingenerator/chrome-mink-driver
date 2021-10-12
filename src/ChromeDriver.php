@@ -49,8 +49,12 @@ class ChromeDriver extends CoreDriver
      * @param $base_url
      * @param array $options
      */
-    public function __construct($api_url = 'http://localhost:9222', HttpClient $http_client = null, $base_url, $options = [])
+    public function __construct($api_url = 'http://localhost:9222', HttpClient $http_client = null, $base_url = null, $options = [])
     {
+        if (empty($base_url)) {
+            throw new \InvalidArgumentException("Base URL can not be empty.");
+        }
+
         if ($http_client == null) {
             $http_client = new HttpClient();
         }
