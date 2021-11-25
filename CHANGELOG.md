@@ -3,6 +3,11 @@ Changelog
 
 ## Unreleased
 
+## 2.7.0.4 (CUSTOM INGENERATOR RELEASE) (2021-11-25)
+
+* Add debugging output to try and understand why we have started getting fatal `Trying to access array offset on value
+  of type null` in some cases following a ConnectionException.
+
 ## 2.7.0.3 (CUSTOM INGENERATOR RELEASE) (2021-10-12)
 
 * Fix PHP8 deprecation warning as optional constructor args can't be before required ones
