@@ -94,6 +94,21 @@ abstract class DevToolsConnection
                 }
 
                 $state = json_decode(substr($message, strpos($message, '{')), true);
+
+                if ( ! \is_array($state)) {
+                    // The driver code appears to assume there'll always be JSON in the message, but we're getting
+                    // 'trying to access array offset on value of type null' which implies either there isn't, or there
+                    // is but it's not valid for some reason.
+                    // Throw with the details so we can try to debug what's going on.
+                    throw new \RuntimeException(
+                        sprintf(
+                            "Unexpected ConnectionException content:\nMessage: `%s`\nJSON state: %s",
+                            $message,
+                            \json_last_error_msg()
+                        )
+                    );
+                }
+
                 throw new StreamReadException($state['eof'], $state['timed_out'], $state['blocked']);
             }
             if (is_null($response)) {
