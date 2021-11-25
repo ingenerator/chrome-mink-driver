@@ -3,6 +3,11 @@ Changelog
 
 ## Unreleased
 
+## 2.7.0.5 (CUSTOM INGENERATOR RELEASE) (2021-11-25)
+
+* Update handling of ConnectionException to handle the change to how textalk/websocket provides the stream metadata
+  since v1.5.0 - it no longer json-encodes the stream status in the exception message.
+
 ## 2.7.0.4 (CUSTOM INGENERATOR RELEASE) (2021-11-25)
 
 * Add debugging output to try and understand why we have started getting fatal `Trying to access array offset on value
