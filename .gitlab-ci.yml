@@ -31,26 +31,6 @@ GrumPHP:
     - composer require phpro/grumphp ergebnis/composer-normalize enlightn/security-checker --prefer-dist --ansi --no-progress --sort-packages
     - vendor/bin/grumphp run -n
 
-PHP 5.6:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:5.6
-
-PHP 7.0:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.0
-
-PHP 7.1:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.1
-
-PHP 7.2:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.2
-
-PHP 7.3:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
-
 PHP 7.4:
   <<: *test_template
   image: registry.gitlab.com/xurizaemon/docker-chrome-headless:7.4
