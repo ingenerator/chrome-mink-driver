@@ -37,12 +37,6 @@
             "DMore\\ChromeDriverTests\\": "tests/"
         }
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/adorin/driver-testsuite.git"
-        }
-    ],
     "minimum-stability": "stable",
     "support": {
         "issues": "https://gitlab.com/DMore/chrome-mink-driver/-/issues"
