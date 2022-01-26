@@ -19,8 +19,8 @@ class ChromeBrowserTest extends TestCase
             ->willReturn('Error Happened!');
 
         $this->expectException(\RuntimeException::class);
-        // Test that chromium response is included in exception message
-        $this->expectExceptionMessageRegExp('/Error Happened!/');
+        // Test that chromium response is included in exception message.
+        $this->expectExceptionMessageMatches('/Error Happened!/');
 
         $browser = new Browser('http://localhost:9222');
         $browser->setHttpClient($client);
