@@ -47,43 +47,43 @@ Chromium:
   <<: *test_template
   variables:
     CHROME_BUILD: chromium
-  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.1
+  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.0
 
 Chrome unstable:
   <<: *test_template
   variables:
     CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.1
+  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.0
 
 Chrome beta:
   <<: *test_template
   variables:
     CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.1
+  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.0
 
 Headed:
   <<: *test_template
   variables:
     AUTOSTART_XVFB: "true"
-  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.1
+  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.0
 
 Headed chrome unstable:
   <<: *test_template
   variables:
     AUTOSTART_XVFB: "true"
     CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.1
+  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.0
 
 Headed chrome beta:
   <<: *test_template
   variables:
     AUTOSTART_XVFB: "true"
     CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.1
+  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.0
 
 Headed chromium:
   <<: *test_template
   variables:
     AUTOSTART_XVFB: "true"
     CHROME_BUILD: chromium
-  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.1
+  image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.0
