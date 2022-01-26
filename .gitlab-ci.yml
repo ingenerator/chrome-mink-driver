@@ -24,12 +24,20 @@ stages:
         - junit.xml
 
 GrumPHP:
-  image: composer:2.0.8
+  image: composer
   stage: lint
   tags: [docker]
   script:
     - composer require phpro/grumphp ergebnis/composer-normalize enlightn/security-checker --prefer-dist --ansi --no-progress --sort-packages
     - vendor/bin/grumphp run -n
+
+PHP 7.2:
+  <<: *test_template
+  image: registry.gitlab.com/dmore/docker-chrome-headless:7.2
+
+PHP 7.3:
+  <<: *test_template
+  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
 
 PHP 7.4:
   <<: *test_template
