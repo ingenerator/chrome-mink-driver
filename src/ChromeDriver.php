@@ -423,7 +423,7 @@ JS;
             }
         } else {
             $url = $this->base_url . '/';
-            $value = urlencode($value);
+            $value = rawurlencode($value);
             $this->page->send('Network.setCookie', ['url' => $url, 'name' => $name, 'value' => $value]);
         }
     }
@@ -443,7 +443,7 @@ JS;
 
         foreach ($result['cookies'] as $cookie) {
             if ($cookie['name'] == $name) {
-                return urldecode($cookie['value']);
+                return rawurldecode($cookie['value']);
             }
         }
         return null;
