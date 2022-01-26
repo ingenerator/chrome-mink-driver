@@ -1231,15 +1231,16 @@ JS;
     }
 
     /**
-     * Clear the sotred console messages.
-     *
-     * @return array
+     * Clear the console messages.
      */
     public function clearConsoleMessages()
     {
-        return $this->page->getConsoleMessages();
+        $this->page->clearConsoleMessages();
     }
 
+    /**
+     * Clear browser cookies.
+     */
     protected function deleteAllCookies()
     {
         $this->page->send('Network.clearBrowserCookies');
