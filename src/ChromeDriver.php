@@ -763,7 +763,7 @@ JS;
      */
     private function setNonTextTypeValue($xpath, $value)
     {
-        $json_value = ctype_digit($value) ? $value : json_encode($value);
+        $json_value = is_numeric($value) ? $value : json_encode($value);
         $text_value = json_encode($value);
         $expression = <<<JS
     var expected_value = $json_value;
