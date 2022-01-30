@@ -48,9 +48,6 @@ PHP 8.0:
   image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.0
 
 PHP 8.1:
-  variables:
-    # Until https://github.com/minkphp/driver-testsuite/pull/56 is fixed.
-    SYMFONY_DEPRECATIONS_HELPER: disabled
   <<: *test_template
   image: registry.gitlab.com/xurizaemon/docker-chrome-headless:8.1
 
