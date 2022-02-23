@@ -3,6 +3,11 @@ Changelog
 
 ## Unreleased
 
+## 2.7.0.6 (CUSTOM INGENERATOR RELEASE) (2022-02-23)
+
+* Don't fake the timestamps on click events - resolves issues with javascript frameworks ignoring events due to
+  incorrect timestamps.
+
 ## 2.7.0.5 (CUSTOM INGENERATOR RELEASE) (2021-11-25)
 
 * Update handling of ConnectionException to handle the change to how textalk/websocket provides the stream metadata
