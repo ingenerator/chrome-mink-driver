@@ -860,7 +860,6 @@ JS;
                     'x' => $left,
                     'y' => $top,
                     'button' => 'left',
-                    'timestamp' => time(),
                     'clickCount' => 1,
                 ];
                 $this->page->send('Input.dispatchMouseEvent', $parameters);
@@ -869,7 +868,6 @@ JS;
                     'x' => $left,
                     'y' => $top,
                     'button' => 'left',
-                    'timestamp' => time(),
                     'clickCount' => 1,
                 ];
                 $this->page->send('Input.dispatchMouseEvent', $parameters);
