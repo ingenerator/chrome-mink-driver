@@ -55,43 +55,43 @@ Chromium:
   <<: *test_template
   variables:
     CHROME_BUILD: chromium
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
 
 Chrome unstable:
   <<: *test_template
   variables:
     CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
 
 Chrome beta:
   <<: *test_template
   variables:
     CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
 
 Headed:
   <<: *test_template
   variables:
     AUTOSTART_XVFB: "true"
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
 
 Headed chrome unstable:
   <<: *test_template
   variables:
     AUTOSTART_XVFB: "true"
     CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
 
 Headed chrome beta:
   <<: *test_template
   variables:
     AUTOSTART_XVFB: "true"
     CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
 
 Headed chromium:
   <<: *test_template
   variables:
     AUTOSTART_XVFB: "true"
     CHROME_BUILD: chromium
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
