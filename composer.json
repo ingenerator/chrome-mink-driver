@@ -35,10 +35,5 @@
         "psr-4": {
             "DMore\\ChromeDriverTests\\": "tests/"
         }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "2.0.x-dev"
-        }
     }
 }
