@@ -9,15 +9,15 @@
             "email": "doriancmore@gmail.com"
         }
     ],
-    "homepage": "https://gitlab.com/DMore/chrome-mink-driver",
+    "homepage": "https://gitlab.com/behat-chrome/chrome-mink-driver",
     "support": {
-        "issues": "https://gitlab.com/DMore/chrome-mink-driver/-/issues"
+        "issues": "https://gitlab.com/behat-chrome/chrome-mink-driver/-/issues"
     },
     "require": {
         "ext-curl": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "behat/mink": "^1.7",
+        "behat/mink": "^1.9",
         "textalk/websocket": "^1.2.0"
     },
     "require-dev": {
