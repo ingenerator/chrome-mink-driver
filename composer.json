@@ -36,6 +36,6 @@
         "ext-curl": "*",
         "ext-json": "*",
         "textalk/websocket": "^1.5.0",
-        "behat/mink": "^1.7"
+        "behat/mink": "^1.9"
     }
 }
