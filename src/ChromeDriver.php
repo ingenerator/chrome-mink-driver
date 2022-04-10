@@ -423,7 +423,7 @@ JS;
             }
         } else {
             $url = $this->base_url . '/';
-            $value = urlencode($value);
+            $value = rawurlencode($value);
             $this->page->send('Network.setCookie', ['url' => $url, 'name' => $name, 'value' => $value]);
         }
     }
@@ -443,7 +443,7 @@ JS;
 
         foreach ($result['cookies'] as $cookie) {
             if ($cookie['name'] == $name) {
-                return urldecode($cookie['value']);
+                return rawurldecode($cookie['value']);
             }
         }
         return null;
@@ -763,7 +763,7 @@ JS;
      */
     private function setNonTextTypeValue($xpath, $value)
     {
-        $json_value = ctype_digit($value) ? $value : json_encode($value);
+        $json_value = is_numeric($value) ? $value : json_encode($value);
         $text_value = json_encode($value);
         $expression = <<<JS
     var expected_value = $json_value;
