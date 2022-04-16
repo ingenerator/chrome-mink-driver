@@ -881,9 +881,16 @@ JS;
 
     /**
      * {@inheritdoc}
+     *
+     * @throws DriverException
+     * @throws ElementNotFoundException
      */
     public function attachFile($xpath, $path)
     {
+        if (!file_exists($path)) {
+            throw new DriverException("ChromeDriver was unable to find file '${path}' to attach it.");
+        }
+
         $script = <<<JS
     if (element == undefined || element.tagName != 'INPUT' || element.type != 'file') {
         throw new Error("Element not found");
