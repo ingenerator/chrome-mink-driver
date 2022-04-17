@@ -138,7 +138,7 @@ abstract class DevToolsConnection
                 $message = $exception->getMessage();
                 if ($json = mb_substr($message, strpos($message, '{'))) {
                     if ($state = json_decode($json, true)) {
-                        throw new StreamReadException($message, $state, $exception);
+                        throw new StreamReadException($message, 101, $state, $exception);
                     }
                 }
                 throw $exception;

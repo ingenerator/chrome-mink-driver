@@ -17,12 +17,14 @@ class StreamReadException extends \Exception
      */
     private $blocked;
 
-    public function __construct($message, $state, $exception)
+    public function __construct($message, $code, $state = [], \Exception $previous = null)
     {
         $this->message = $message;
-        $this->eof = $state['eof'];
-        $this->timed_out = $state['timed_out'];
-        $this->blocked = $state['blocked'];
+        $this->eof = $state['eof'] ?? null;
+        $this->timed_out = $state['timed_out'] ?? null;
+        $this->blocked = $state['blocked'] ?? null;
+
+        parent::__construct($message, 0, $previous);
     }
 
     /**

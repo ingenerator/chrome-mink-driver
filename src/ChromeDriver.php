@@ -71,8 +71,18 @@ class ChromeDriver extends CoreDriver
      */
     private $domWaitTimeout;
 
+    /**
+     * Default value for $domWaitTimeout.
+     *
+     * @var int
+     */
     public static $domWaitTimeoutDefault = 10;
 
+    /**
+     * Default value for $socketTimeout.
+     *
+     * @var int
+     */
     public static $socketTimeoutDefault = 3000;
 
     /**
@@ -679,7 +689,7 @@ JS;
     {
         $expression = $this->getXpathExpression($xpath);
         $expression .= <<<JS
-        element = xpath_result.iterateNext();
+    element = xpath_result.iterateNext();
     var value = null
 
     if (element.tagName == 'INPUT' && element.type == 'checkbox') {

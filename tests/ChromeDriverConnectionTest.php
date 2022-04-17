@@ -31,7 +31,7 @@ class ChromeDriverConnectionTest extends ChromeDriverTestBase
     /**
      * JS confirm() will lead the browser to time out.
      */
-    public function testStreamReadExceptionIfResponseBlocked()
+    public function testTimeoutExceptionIfResponseBlocked()
     {
         // We don't want to wait the default 10s to time out.
         $options = [
