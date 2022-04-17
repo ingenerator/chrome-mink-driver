@@ -2,8 +2,7 @@
 
 namespace DMore\ChromeDriverTests;
 
-use Behat\Mink\Exception\DriverException;
-use DMore\ChromeDriver\ChromeBrowser as Browser;
+use DMore\ChromeDriver\ChromeBrowser;
 use DMore\ChromeDriver\ChromeDriver;
 use DMore\ChromeDriver\HttpClient;
 use WebSocket\TimeoutException;
@@ -16,10 +15,21 @@ use WebSocket\TimeoutException;
 class ChromeDriverConnectionTest extends ChromeDriverTestBase
 {
     /**
-     * A confirm() will lead the browser to time out.
-     *
-     * @throws DriverException
-     * @throws \Behat\Mink\Exception\UnsupportedDriverActionException
+     * Unable to connect to nonsense ChromeDriver URL.
+     */
+    public function testRuntimeExceptionIfNotConnected()
+    {
+        $nonWorkingUrl = 'http://localhost:12345';
+        $this->driver = new ChromeDriver($nonWorkingUrl, null, 'about:blank', []);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Could not fetch version information from http://localhost:12345/json/version.');
+        $this->driver->visit('about:blank');
+        // Content read is necessary to trigger timeout.
+        $this->driver->getContent();
+    }
+
+    /**
+     * JS confirm() will lead the browser to time out.
      */
     public function testStreamReadExceptionIfResponseBlocked()
     {
@@ -37,10 +47,10 @@ class ChromeDriverConnectionTest extends ChromeDriverTestBase
         $this->driver->getContent();
     }
 
-   /**
-     * @throws DriverException
+    /**
+     *
      */
-    public function testInformativeExceptionIfChromeConnectionFailed()
+    public function testRuntimeExceptionIfClientConnectionFails()
     {
         $client = $this->getMockBuilder(HttpClient::class)
             ->disableOriginalConstructor()
@@ -54,7 +64,7 @@ class ChromeDriverConnectionTest extends ChromeDriverTestBase
         // Test that chromium response is included in exception message.
         $this->expectExceptionMessageMatches('/Error Happened!/');
 
-        $browser = new Browser('http://localhost:9222');
+        $browser = new ChromeBrowser('http://localhost:9222');
         $browser->setHttpClient($client);
         $browser->setHttpUri('http://localhost:9222');
         $browser->start();
