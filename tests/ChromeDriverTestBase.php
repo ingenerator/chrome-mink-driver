@@ -2,13 +2,8 @@
 
 namespace DMore\ChromeDriverTests;
 
-use Behat\Mink\Exception\ElementNotFoundException;
-use Behat\Mink\Exception\DriverException;
-use DMore\ChromeDriver\ChromeBrowser as Browser;
 use DMore\ChromeDriver\ChromeDriver;
-use DMore\ChromeDriver\HttpClient;
 use PHPUnit\Framework\TestCase;
-use DMore\ChromeDriverTests\ChromeDriverTestBase;
 
 /**
  * Note that the majority of driver test coverage is provided via minkphp/driver-testsuite.
