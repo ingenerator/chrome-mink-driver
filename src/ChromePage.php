@@ -11,24 +11,34 @@ class ChromePage extends DevToolsConnection
      * @var array
      */
     private $pending_requests = [];
+
     /**
      * @var bool
      */
     private $page_ready = true;
+
     /**
      * @var bool
      */
     private $has_javascript_dialog = false;
+
     /**
      * @var array https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Response
      */
     private $response = null;
+
     /**
      * @var array
      */
     private $console_messages = [];
 
-    public function connect($url = null)
+    /**
+     * Connect and set up.
+     *
+     * @param null $url
+     * @throws \Exception
+     */
+    public function connect($url = null): void
     {
         parent::connect();
         $this->send('Page.enable');
@@ -39,12 +49,23 @@ class ChromePage extends DevToolsConnection
         $this->send('Console.enable');
     }
 
-    public function reset()
+    /**
+     * Reset the latest response.
+     */
+    public function reset(): void
     {
         $this->response = null;
     }
 
-    public function visit($url)
+    /**
+     * Visit a new URL.
+     *
+     * @param $url
+     * @throws ConnectionException
+     * @throws DriverException
+     * @throws StreamReadException
+     */
+    public function visit($url): void
     {
         if (count($this->pending_requests) > 0) {
             $this->waitFor(
@@ -58,12 +79,22 @@ class ChromePage extends DevToolsConnection
         $this->send('Page.navigate', ['url' => $url]);
     }
 
+    /**
+     * Reload the current page.
+     *
+     * @throws \Exception
+     */
     public function reload()
     {
         $this->page_ready = false;
         $this->send('Page.reload');
     }
 
+    /**
+     * Wait for page to load.
+     *
+     * @throws DriverException
+     */
     public function waitForLoad()
     {
         if (!$this->page_ready) {
@@ -92,6 +123,14 @@ class ChromePage extends DevToolsConnection
         }
     }
 
+    /**
+     * Get the response.
+     *
+     * @return array|null
+     * @throws ConnectionException
+     * @throws DriverException
+     * @throws StreamReadException
+     */
     public function getResponse()
     {
         $this->waitForHttpResponse();
@@ -101,12 +140,18 @@ class ChromePage extends DevToolsConnection
     /**
      * @return boolean
      */
-    public function hasJavascriptDialog()
+    public function hasJavascriptDialog(): bool
     {
         return $this->has_javascript_dialog;
     }
 
-    public function getTabs()
+    /**
+     * Get the browser's tabs.
+     *
+     * @return array
+     * @throws \Exception
+     */
+    public function getTabs(): array
     {
         $tabs = [];
         foreach ($this->send('Target.getTargets')['targetInfos'] as $tab) {
@@ -122,7 +167,7 @@ class ChromePage extends DevToolsConnection
      *
      * @return array
      */
-    public function getConsoleMessages()
+    public function getConsoleMessages(): array
     {
         return $this->console_messages;
     }
@@ -135,6 +180,13 @@ class ChromePage extends DevToolsConnection
         $this->console_messages = [];
     }
 
+    /**
+     * Wait for an HTTP response.
+     *
+     * @throws ConnectionException
+     * @throws DriverException
+     * @throws StreamReadException
+     */
     private function waitForHttpResponse()
     {
         if (null === $this->response) {
@@ -157,11 +209,9 @@ class ChromePage extends DevToolsConnection
     }
 
     /**
-     * @param  array $data
-     * @return bool
-     * @throws DriverException
+     * {inheritDoc}
      */
-    protected function processResponse(array $data)
+    protected function processResponse(array $data): bool
     {
         if (array_key_exists('method', $data)) {
             switch ($data['method']) {

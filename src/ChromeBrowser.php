@@ -11,43 +11,53 @@ class ChromeBrowser extends DevToolsConnection
      * @var string
      */
     private $context_id;
+
     /**
      * @var bool
      */
     private $headless = true;
+
     /**
      * @var HttpClient
      */
     private $http_client;
+
     /**
      * @var string
      */
     private $http_uri;
+
     /**
      * @var string
      */
     private $version;
 
     /**
+     * Set the HTTP client.
+     *
      * @param HttpClient $client
      */
-    public function setHttpClient(HttpClient $client)
+    public function setHttpClient(HttpClient $client): void
     {
         $this->http_client = $client;
     }
 
     /**
+     * Set the HTTP URI.
+     *
      * @param string $http_uri
      */
-    public function setHttpUri($http_uri)
+    public function setHttpUri($http_uri): void
     {
         $this->http_uri = $http_uri;
     }
 
     /**
+     * Start.
+     *
      * @throws DriverException
      */
-    public function start()
+    public function start(): string
     {
         $response = $this->http_client->get($this->http_uri . '/json/version');
         $versionInfo = json_decode($response);
@@ -106,10 +116,20 @@ class ChromeBrowser extends DevToolsConnection
 
         $json = $this->http_client->get($this->http_uri . '/json/new');
         $response = json_decode($json, true);
+        $debug = [
+            'response[id] type' => get_class($response['id']),
+            'response' => $response,
+        ];
+        print_r($response);
         return $response['id'];
     }
 
-    public function close()
+    /**
+     * Close the session.
+     *
+     * @throws ConnectionException
+     */
+    public function close(): void
     {
         if ($this->headless) {
             if (!$this->send('Target.disposeBrowserContext', ['browserContextId' => $this->context_id])) {
@@ -119,7 +139,10 @@ class ChromeBrowser extends DevToolsConnection
         parent::close();
     }
 
-    protected function processResponse(array $data)
+    /**
+     * {inheritDoc}
+     */
+    protected function processResponse(array $data): bool
     {
         return false;
     }
