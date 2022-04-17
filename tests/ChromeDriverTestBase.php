@@ -35,6 +35,10 @@ class ChromeDriverTestBase extends TestCase
      */
     private function getDriver(): ChromeDriver
     {
-        return new ChromeDriver('http://localhost:9222', null, 'about:blank');
+        $options = [
+            'domWaitTimeout' => ChromeDriver::$domWaitTimeoutDefault,
+            'socketTimeout' => ChromeDriver::$socketTimeoutDefault,
+        ];
+        return new ChromeDriver('http://localhost:9222', null, 'about:blank', $options);
     }
 }

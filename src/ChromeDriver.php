@@ -71,6 +71,10 @@ class ChromeDriver extends CoreDriver
      */
     private $domWaitTimeout;
 
+    public static $domWaitTimeoutDefault = 10;
+
+    public static $socketTimeoutDefault = 3000;
+
     /**
      * @var array
      */
@@ -79,10 +83,10 @@ class ChromeDriver extends CoreDriver
     /**
      * ChromeDriver constructor.
      *
-     * @param string     $api_url
+     * @param string $api_url
      * @param HttpClient $http_client
-     * @param $base_url
-     * @param array      $options
+     * @param string $base_url
+     * @param array $options
      */
     public function __construct(
         $api_url = 'http://localhost:9222',
@@ -102,11 +106,11 @@ class ChromeDriver extends CoreDriver
         $this->base_url = $base_url;
         $this->browser = new ChromeBrowser(
             $this->ws_url . '/devtools/browser',
-            isset($options['socketTimeout']) ? $options['socketTimeout'] : 10
+            $options['socketTimeout'] ?? self::$socketTimeoutDefault
         );
         $this->browser->setHttpClient($http_client);
         $this->browser->setHttpUri($api_url);
-        $this->domWaitTimeout = isset($options['domWaitTimeout']) ? $options['domWaitTimeout'] : 3000;
+        $this->domWaitTimeout = $options['domWaitTimeout'] ?? self::$domWaitTimeoutDefault;
         $this->options = $options;
     }
 
@@ -119,9 +123,8 @@ class ChromeDriver extends CoreDriver
 
         // Only set download options in headless mode
         if (true === $this->browser->isHeadless()) {
-            $downloadBehavior = isset($this->options['downloadBehavior']) ?
-                $this->options['downloadBehavior'] : 'default';
-            $downloadPath = isset($this->options['downloadPath']) ? $this->options['downloadPath'] : '/tmp/';
+            $downloadBehavior = $this->options['downloadBehavior'] ?? 'default';
+            $downloadPath = $this->options['downloadPath'] ?? '/tmp/';
             if ($downloadBehavior !== 'default' || rtrim($downloadPath, '/') !== '/tmp') {
                 $this->page->send(
                     'Page.setDownloadBehavior',
@@ -1520,7 +1523,7 @@ JS;
             if ($window['id'] == $window_id) {
                 $this->page = new ChromePage(
                     $window['webSocketDebuggerUrl'],
-                    isset($this->options['socketTimeout']) ? $this->options['socketTimeout'] : 10
+                    $this->options['socketTimeout'] ?? self::$domWaitTimeoutDefault
                 );
                 $this->page->connect();
                 $this->current_window = $window_id;

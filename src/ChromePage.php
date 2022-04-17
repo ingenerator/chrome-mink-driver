@@ -248,7 +248,6 @@ class ChromePage extends DevToolsConnection
                     break;
                 case 'Inspector.targetCrashed':
                     throw new DriverException('Browser crashed');
-                    break;
                 case 'Animation.animationStarted':
                     if (!empty($data['params']['source']['duration'])) {
                         usleep($data['params']['source']['duration'] * 10);
