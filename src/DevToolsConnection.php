@@ -169,8 +169,9 @@ abstract class DevToolsConnection
     /**
      * Process a client response.
      *
-     * @param array $data
+     * @param  array $data
      * @return bool
+     * @throws DriverException
      */
     abstract protected function processResponse(array $data): bool;
 }
