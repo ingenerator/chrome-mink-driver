@@ -12,25 +12,37 @@ abstract class DevToolsConnection
      * @var Client
      */
     private $client;
+
     /**
      * @var int
      */
     private $command_id = 1;
+
     /**
      * @var string
      */
     private $url;
+
     /**
      * @var int|null
      */
     private $socket_timeout;
 
+    /**
+     * @param $url
+     * @param null $socket_timeout
+     */
     public function __construct($url, $socket_timeout = null)
     {
         $this->url = $url;
         $this->socket_timeout = $socket_timeout;
     }
 
+    /**
+     * Check DevTools connection.
+     *
+     * @return bool
+     */
     public function canDevToolsConnectionBeEstablished()
     {
         $url = $this->getUrl() . "/json/version";
@@ -43,33 +55,48 @@ abstract class DevToolsConnection
         return $s !== false && strpos($s, 'Chrome') !== false;
     }
 
-    protected function getUrl()
+    /**
+     * Get the current URL.
+     *
+     * @return string
+     */
+    protected function getUrl(): string
     {
         return $this->url;
     }
 
-    public function connect($url = null)
+    /**
+     * Connect to the client.
+     *
+     * @param null $url
+     */
+    public function connect($url = null): void
     {
         $url = $url == null ? $this->url : $url;
         $options = ['fragment_size' => 2000000]; // Chrome closes the connection if a message is sent in fragments
         if (is_numeric($this->socket_timeout) && $this->socket_timeout > 0) {
-            $options['timeout'] = (int) $this->socket_timeout;
+            $options['timeout'] = (int)$this->socket_timeout;
         }
         $this->client = new Client($url, $options);
     }
 
-    public function close()
+    /**
+     * Close the client connection.
+     */
+    public function close(): void
     {
         $this->client->close();
     }
 
     /**
-     * @param  string $command
-     * @param  array  $parameters
+     * Send a command to the client.
+     *
+     * @param string $command
+     * @param array $parameters
      * @return null|string|string[][]
      * @throws \Exception
      */
-    public function send($command, array $parameters = [])
+    public function send($command, array $parameters = []): array
     {
         $payload['id'] = $this->command_id++;
         $payload['method'] = $command;
@@ -92,6 +119,15 @@ abstract class DevToolsConnection
         return ['result' => ['type' => 'undefined']];
     }
 
+    /**
+     * Wait on response from client.
+     *
+     * @param callable $is_ready
+     * @return mixed|null
+     * @throws ConnectionException
+     * @throws DriverException
+     * @throws StreamReadException
+     */
     protected function waitFor(callable $is_ready)
     {
         $data = [];
@@ -131,8 +167,10 @@ abstract class DevToolsConnection
     }
 
     /**
-     * @param  array $data
+     * Process a client response.
+     *
+     * @param array $data
      * @return bool
      */
-    abstract protected function processResponse(array $data);
+    abstract protected function processResponse(array $data): bool;
 }
