@@ -136,12 +136,12 @@ abstract class DevToolsConnection
                 $response = $this->client->receive();
             } catch (ConnectionException $exception) {
                 $message = $exception->getMessage();
-                if (false !== strpos($message, 'Empty read; connection dead?')) {
-                    throw $exception;
+                if ($json = mb_substr($message, strpos($message, '{'))) {
+                    if ($state = json_decode($json, true)) {
+                        throw new StreamReadException($state['eof'], $state['timed_out'], $state['blocked']);
+                    }
                 }
-
-                $state = json_decode(substr($message, strpos($message, '{')), true);
-                throw new StreamReadException($state['eof'], $state['timed_out'], $state['blocked']);
+                throw $exception;
             }
             if (is_null($response)) {
                 return null;
