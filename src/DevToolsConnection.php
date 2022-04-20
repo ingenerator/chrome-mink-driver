@@ -143,23 +143,26 @@ abstract class DevToolsConnection
                 }
                 throw $exception;
             }
+
             if (is_null($response)) {
                 return null;
             }
-            $data = json_decode($response, true);
 
-            if (array_key_exists('error', $data)) {
-                $message = isset($data['error']['data']) ?
-                    $data['error']['message'] . '. ' . $data['error']['data'] : $data['error']['message'];
-                throw new DriverException($message, $data['error']['code']);
-            }
+            if ($data = json_decode($response, true)) {
+                if (array_key_exists('error', $data)) {
+                    $message = isset($data['error']['data']) ?
+                        $data['error']['message'] . '. ' . $data['error']['data'] : $data['error']['message'];
+                    throw new DriverException($message, $data['error']['code']);
+                }
 
-            if ($this->processResponse($data)) {
-                break;
-            }
+                // What's this doing?
+                if ($this->processResponse($data)) {
+                    break;
+                }
 
-            if ($is_ready($data)) {
-                break;
+                if ($is_ready($data)) {
+                    break;
+                }
             }
         }
 
