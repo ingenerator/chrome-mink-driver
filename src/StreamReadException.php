@@ -15,6 +15,14 @@ class StreamReadException extends \Exception
         $this->eof = $eof;
         $this->timed_out = $timed_out;
         $this->blocked = $blocked;
+        parent::__construct(
+            sprintf(
+                'Failed read: eof=%d timed_out=%d blocked=%d',
+                $eof,
+                $timed_out,
+                $blocked
+            )
+        );
     }
 
     /**
