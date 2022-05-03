@@ -2,6 +2,7 @@
 
 namespace DMore\ChromeDriver;
 
+use Behat\Mink\Exception\DriverException;
 use Ingenerator\PHPUtils\DateTime\DateTimeDiff;
 use Ingenerator\PHPUtils\StringEncoding\JSON;
 use WebSocket\ConnectionException;
@@ -87,6 +88,19 @@ class ChromeDriverDebugLogger
             PROJECT_BASE_DIR.'/build/logs/chromedriver-debug.log.jsonl',
             JSON::encode($vars, FALSE)."\n",
             FILE_APPEND
+        );
+    }
+
+    public function logDriverException(DriverException $exception, string $context): void
+    {
+        $this->writeLog(
+            [
+                'action'  => 'driverException',
+                'context' => $context,
+                'message' => $exception->getMessage(),
+                'code'    => $exception->getCode(),
+                'trace'   => $exception->getTraceAsString(),
+            ]
         );
     }
 

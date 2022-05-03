@@ -185,6 +185,8 @@ class ChromeDriver extends CoreDriver
                 STDOUT,
                 "ERROR: Could not reset - ".$e->getMessage()."\n".$e->getTraceAsString()
             );
+            $l = new ChromeDriverDebugLogger;
+            $l->logDriverException($e, 'Failed to reset');
             // What happens if we just allow the scenario to continue here????
         }
     }
