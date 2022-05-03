@@ -16,10 +16,13 @@ abstract class DevToolsConnection
     /** @var int|null */
     private $socket_timeout;
 
+    protected ChromeDriverDebugLogger $logger;
+
     public function __construct($url, $socket_timeout = null)
     {
         $this->url = $url;
         $this->socket_timeout = $socket_timeout;
+        $this->logger = new ChromeDriverDebugLogger;
     }
 
     public function canDevToolsConnectionBeEstablished()
@@ -68,11 +71,12 @@ abstract class DevToolsConnection
             $payload['params'] = $parameters;
         }
 
+        $this->logger->logCommandSent($this, $payload);
         $this->client->send(json_encode($payload));
 
         $data = $this->waitFor(function ($data) use ($payload) {
             return array_key_exists('id', $data) && $data['id'] == $payload['id'];
-        });
+        }, 'send-'.$payload['id']);
 
         if (isset($data['result'])) {
             return $data['result'];
@@ -81,13 +85,14 @@ abstract class DevToolsConnection
         return ['result' => ['type' => 'undefined']];
     }
 
-    protected function waitFor(callable $is_ready)
+    protected function waitFor(callable $is_ready, string $debug_reason)
     {
         $data = [];
         while (true) {
             try {
                 $response = $this->client->receive();
             } catch (ConnectionException $exception) {
+                $this->logger->logConnectionException($this, $exception, $debug_reason);
                 $message = $exception->getMessage();
                 if (false !== strpos($message, 'Empty read; connection dead?')) {
                     throw $exception;
@@ -97,10 +102,14 @@ abstract class DevToolsConnection
 
                 throw new StreamReadException($state['eof'], $state['timed_out'], $state['blocked']);
             }
+
+            $this->logger->logNullResponse($this, $debug_reason);
             if (is_null($response)) {
                 return null;
             }
             $data = json_decode($response, true);
+
+            $this->logger->logChromeResponse($this, $data, $debug_reason);
 
             if (array_key_exists('error', $data)) {
                 $message = isset($data['error']['data']) ? $data['error']['message'] . '. ' . $data['error']['data'] : $data['error']['message'];

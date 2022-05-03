@@ -39,7 +39,7 @@ class ChromePage extends DevToolsConnection
         if (count($this->pending_requests) > 0) {
             $this->waitFor(function () {
                 return count($this->pending_requests) == 0;
-            });
+            }, 'before-visit');
         }
         $this->response = null;
         $this->page_ready = false;
@@ -58,7 +58,7 @@ class ChromePage extends DevToolsConnection
             try {
                 $this->waitFor(function () {
                     return $this->page_ready;
-                });
+                }, 'wait-for-load');
             } catch (StreamReadException $exception) {
                 if ($exception->isTimedOut() && false === $this->canDevToolsConnectionBeEstablished()) {
                     throw new \RuntimeException(
@@ -130,8 +130,8 @@ class ChromePage extends DevToolsConnection
             }
 
             $this->waitFor(function () {
-                return null !== $this->response && count($this->pending_requests) == 0;
-            });
+                return NULL !== $this->response && count($this->pending_requests) == 0;
+            }, 'wait-for-http-response');
         }
     }
 
