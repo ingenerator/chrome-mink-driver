@@ -172,13 +172,21 @@ class ChromeDriver extends CoreDriver
      */
     public function reset()
     {
-        $this->ensureStarted();
-        $this->document = 'document';
-        $this->deleteAllCookies();
-        $this->connectToWindow($this->main_window);
-        $this->page->reset();
-        $this->request_headers = [];
-        $this->sendRequestHeaders();
+        try {
+            $this->ensureStarted();
+            $this->document = 'document';
+            $this->deleteAllCookies();
+            $this->connectToWindow($this->main_window);
+            $this->page->reset();
+            $this->request_headers = [];
+            $this->sendRequestHeaders();
+        } catch (DriverException $e) {
+            \fwrite(
+                STDOUT,
+                "ERROR: Could not reset - ".$e->getMessage()."\n".$e->getTraceAsString()
+            );
+            // What happens if we just allow the scenario to continue here????
+        }
     }
 
     /**
