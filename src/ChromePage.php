@@ -42,13 +42,13 @@ class ChromePage extends DevToolsConnection
             }, 'before-visit');
         }
         $this->response = null;
-        $this->page_ready = false;
+        $this->setPageReady(FALSE, __METHOD__);
         $this->send('Page.navigate', ['url' => $url]);
     }
 
     public function reload()
     {
-        $this->page_ready = false;
+        $this->setPageReady(FALSE, __METHOD__);
         $this->send('Page.reload');
     }
 
@@ -169,11 +169,11 @@ class ChromePage extends DevToolsConnection
                 case 'Page.frameNavigated':
                 case 'Page.loadEventFired':
                 case 'Page.frameStartedLoading':
-                    $this->page_ready = false;
-                    break;
+                    $this->setPageReady(FALSE, $data['method']);
+                break;
                 case 'Page.navigatedWithinDocument':
                 case 'Page.frameStoppedLoading':
-                    $this->page_ready = true;
+                    $this->setPageReady(TRUE, $data['method']);
                     break;
                 case 'Inspector.targetCrashed':
                     throw new DriverException('Browser crashed');
@@ -186,7 +186,7 @@ class ChromePage extends DevToolsConnection
                 case 'Security.certificateError':
                     if (isset($data['params']['eventId'])) {
                         $this->send('Security.handleCertificateError', ['eventId' => $data['params']['eventId'], 'action' => 'continue']);
-                        $this->page_ready = false;
+                        $this->setPageReady(FALSE, $data['method']);
                     }
                     break;
                 case 'Console.messageAdded':
@@ -258,6 +258,12 @@ class ChromePage extends DevToolsConnection
     public function registerJavascriptDialogHandler(callable $handler)
     {
         $this->javascript_dialog_handler = $handler;
+    }
+
+    private function setPageReady(bool $state, string $change_trigger): void
+    {
+        $this->logger->logPageReadyStateChange($state, $change_trigger);
+        $this->page_ready = $state;
     }
 
 }

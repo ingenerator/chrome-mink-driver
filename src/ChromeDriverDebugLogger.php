@@ -104,6 +104,17 @@ class ChromeDriverDebugLogger
         );
     }
 
+    public function logPageReadyStateChange(bool $state, string $change_trigger)
+    {
+        $this->writeLog(
+            [
+                'action'  => 'pageReadyStateChange',
+                'state'   => $state,
+                'trigger' => $change_trigger,
+            ]
+        );
+    }
+
     private function nameConnection(DevToolsConnection $connection)
     {
         if ($connection instanceof ChromePage) {
