@@ -22,7 +22,7 @@ abstract class DevToolsConnection
     {
         $this->url = $url;
         $this->socket_timeout = $socket_timeout;
-        $this->logger = new ChromeDriverDebugLogger;
+        $this->logger = ChromeDriverDebugLogger::instance();
     }
 
     public function canDevToolsConnectionBeEstablished()

@@ -9,6 +9,19 @@ use WebSocket\ConnectionException;
 
 class ChromeDriverDebugLogger
 {
+    private $scenario_id = 0;
+
+    private $page_ready  = NULL;
+
+    public static function instance(): ChromeDriverDebugLogger
+    {
+        static $instance;
+        if ( ! $instance) {
+            $instance = new static;
+        }
+
+        return $instance;
+    }
 
     public function __construct()
     {
@@ -74,10 +87,12 @@ class ChromeDriverDebugLogger
         }
         $now = new \DateTimeImmutable;
 
-        $vars        = array_merge(
+        $vars = array_merge(
             [
-                '@'   => ($now)->format('H:i:s.u'),
-                '+ms' => round(DateTimeDiff::microsBetween($last_logged, $now) / 1000, 3),
+                '@'          => ($now)->format('H:i:s.u'),
+                '+ms'        => round(DateTimeDiff::microsBetween($last_logged, $now) / 1000, 3),
+                'scenario'   => $this->scenario_id,
+                'page_ready' => $this->page_ready,
             ],
             $vars
         );
@@ -111,6 +126,28 @@ class ChromeDriverDebugLogger
                 'action'  => 'pageReadyStateChange',
                 'state'   => $state,
                 'trigger' => $change_trigger,
+            ]
+        );
+        $this->page_ready = $state;
+    }
+
+    public function beginScenario(string $file, string $line)
+    {
+        $this->scenario_id++;
+        $this->writeLog(
+            [
+                'action'   => 'beginScenario',
+                'scenarioName' => $file.':'.$line,
+            ]
+        );
+    }
+
+    public function endScenario(bool $is_passed)
+    {
+        $this->writeLog(
+            [
+                'action' => 'endScenario',
+                'result' => $is_passed,
             ]
         );
     }
