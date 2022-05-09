@@ -201,8 +201,7 @@ class ChromeDriver extends CoreDriver
         $this->ensureStarted();
         $this->page->visit($url);
         $this->document = 'document';
-        $this->page->waitForLoad();
-        $this->waitForDom();
+        $this->page->waitUntilFullyLoaded();
     }
 
     /**
@@ -214,7 +213,7 @@ class ChromeDriver extends CoreDriver
      */
     public function getCurrentUrl()
     {
-        $this->waitForDom();
+        $this->page->waitUntilFullyLoaded();
         return $this->evaluateScript('window.location.href');
     }
 
@@ -237,8 +236,8 @@ class ChromeDriver extends CoreDriver
     public function forward()
     {
         $this->runScript('window.history.forward()');
-        $this->waitForDom();
-        $this->page->waitForLoad();
+        $this->page->expectNewPageload();
+        $this->page->waitUntilFullyLoaded();
     }
 
     /**
@@ -249,8 +248,8 @@ class ChromeDriver extends CoreDriver
     public function back()
     {
         $this->runScript('window.history.back()');
-        $this->waitForDom();
-        $this->page->waitForLoad();
+        $this->page->expectNewPageload();
+        $this->page->waitUntilFullyLoaded();
     }
 
     /**
@@ -536,7 +535,7 @@ JS;
      */
     protected function findElementXpaths($xpath)
     {
-        $this->waitForDom();
+        $this->page->waitUntilFullyLoaded();
         $expression = $this->getXpathExpression($xpath);
         $expression .= <<<JS
     function getPathTo(element) {
@@ -880,8 +879,12 @@ JS;
                 ];
                 $this->page->send('Input.dispatchMouseEvent', $parameters);
             }
+            // @todo do we always want to sleep 50ms here? What if the click does something in the UI rather than triggering a load?
+            // Also this is kinda tricky as we *know* a click *might* trigger navigation, or it might not, so we can't
+            // mark this as being about to navigate (in the same way we do in visit). So probably we do just have
+            // to wait a moment and see what the click is going to do.
             usleep(50000);
-            $this->waitForDom();
+            $this->page->waitUntilFullyLoaded();
         }
     }
 
@@ -1478,12 +1481,6 @@ JS;
     protected function sendRequestHeaders()
     {
         $this->page->send('Network.setExtraHTTPHeaders', ['headers' => $this->request_headers ?: new \stdClass()]);
-    }
-
-    protected function waitForDom()
-    {
-        $this->wait($this->domWaitTimeout, 'document.readyState == "complete"');
-        $this->page->waitForLoad();
     }
 
     /**

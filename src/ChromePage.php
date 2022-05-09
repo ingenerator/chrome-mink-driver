@@ -256,4 +256,46 @@ class ChromePage extends DevToolsConnection
         $this->page_ready = $state;
     }
 
+    public function waitUntilFullyLoaded(): void
+    {
+        // $this->wait($this->domWaitTimeout, 'document.readyState == "complete"');
+        // $this->page->waitForLoad();
+
+        // The old waitForDom was waiting for document.readyState == 'complete'
+        // But this in turn called evaluateScript (in a loop) with a bunch of sleeping
+        // And runSript calls $page->waitForLoad() as well so it was doing waitForLoad -> runScript -> waitForLoad
+
+        // If we make it that the page only goes ready on the `frameStoppedLoading` event, that follows the `load`
+        // event so by definition document.readyState === complete by that point and there is no need to check it again
+        // and we may just be able to do waitForLoad and leave it at that.
+
+        $this->waitForLoad();
+    }
+
+    public function expectNewPageload():void
+    {
+        // @todo How can we tell the page that an operation will load a new page?
+        // Whether for us calling ->visit, or for us doing a window.history.back() or whatever over the devtools
+        // protocol. We can't really just set page_ready = FALSE as there will be a race condition there as that might
+        // already have happened before control returns from our command.
+
+        // *MAYBE* can we call this *before* the navigating action, and set some sort of navigation count value so we
+        // can assert that the page has moved on from that?
+
+        // *ALTHOUGH* window.history.back() will not always trigger a pageload if they're using PushState API in which
+        // case we can't forcibly wait for a pageload to start, so it's a bit like click().
+
+        // For now give it 300ms, that should be long enough for us to get our normal websocket 'page load' events and
+        // this may yet prove to be the best solution - just wait long enough that we should expect it to have started
+        // reacting to our command.
+
+        // Potentially another approach instead of sleep() is actually to read the websocket with waitFor until:
+        // - a navigation has started
+        // - enough time has passed that we know we're not getting one.
+        //
+        // This still means non-navigating click/back/whatever have to wait a bit to see what they'll do, but probably
+        // not that long and the majority of clicks *are* navigating clicks so at least those would be faster.
+        \usleep(300_000);
+    }
+
 }
