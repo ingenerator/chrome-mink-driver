@@ -87,6 +87,9 @@ abstract class DevToolsConnection
 
     protected function waitFor(callable $is_ready, string $debug_reason, ?\DateTimeImmutable $timeout = NULL)
     {
+        // @todo: What's the best way to set overall timeouts for operations?
+        // Or do we just solidly say that realistically any single step should never be more than 90 seconds say?
+        $timeout ??= new \DateTimeImmutable('+90 seconds');
         $data = [];
         while (TRUE) {
             if ($timeout && (new \DateTimeImmutable > $timeout)) {
