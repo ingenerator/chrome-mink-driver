@@ -90,7 +90,6 @@ abstract class DevToolsConnection
         // @todo: What's the best way to set overall timeouts for operations?
         // Or do we just solidly say that realistically any single step should never be more than 90 seconds say?
         $timeout ??= new \DateTimeImmutable('+90 seconds');
-        $data = [];
         while (TRUE) {
             if ($timeout && (new \DateTimeImmutable > $timeout)) {
                 // Sometimes the socket itself doesn't time out (e.g. if a page is sending AJAX requests
@@ -166,21 +165,17 @@ abstract class DevToolsConnection
                 throw new DriverException($message , $data['error']['code']);
             }
 
-            if ($this->processResponse($data)) {
-                break;
-            }
+            $this->processResponse($data);
 
             if ($is_ready($data)) {
-                break;
+                return $data;
             }
         }
-
-        return $data;
     }
 
     /**
      * @param array $data
-     * @return bool
+     * @return void
      */
-    abstract protected function processResponse(array $data);
+    abstract protected function processResponse(array $data):void;
 }

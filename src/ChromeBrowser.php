@@ -103,9 +103,9 @@ class ChromeBrowser extends DevToolsConnection
         parent::close();
     }
 
-    protected function processResponse(array $data)
+    protected function processResponse(array $data): void
     {
-        return false;
+        // Nothing to do
     }
 
 

@@ -129,10 +129,10 @@ class ChromePage extends DevToolsConnection
 
     /**
      * @param array $data
-     * @return bool
+     * @return void
      * @throws DriverException
      */
-    protected function processResponse(array $data)
+    protected function processResponse(array $data): void
     {
         if (array_key_exists('method', $data)) {
             switch ($data['method']) {
@@ -188,8 +188,6 @@ class ChromePage extends DevToolsConnection
                     break;
             }
         }
-
-        return FALSE;
     }
 
     protected function processJavascriptDialog(array $data)
