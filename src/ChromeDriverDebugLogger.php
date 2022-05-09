@@ -51,17 +51,6 @@ class ChromeDriverDebugLogger
         );
     }
 
-    public function logNullResponse(DevToolsConnection $connection, string $wait_reason): void
-    {
-        $this->writeLog(
-            [
-                'client'  => $this->nameConnection($connection),
-                'action'  => 'receiveEmpty',
-                'waiting' => $wait_reason,
-            ]
-        );
-    }
-
     public function logConnectionException(
         DevToolsConnection  $connection,
         ConnectionException $exception,

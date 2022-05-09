@@ -103,9 +103,16 @@ abstract class DevToolsConnection
                 throw new StreamReadException($state['eof'], $state['timed_out'], $state['blocked']);
             }
 
-            $this->logger->logNullResponse($this, $debug_reason);
             if (is_null($response)) {
-                return null;
+                // I can't see any valid case where we actually can get an explict `null` value from the websocket
+                // other than the socket being closed by Chrome. In any event if it does happen it surely shouldn't
+                // cause us to quit out of the entire thing we're waiting for without processing further events, that
+                // seems entirely wrong - potentially this should have been a `continue`. There's no description
+                // of why this was here in code or commit messages, it has been there ever since the initial commit of
+                // the project.
+                throw new DriverException(
+                    'Received unexpected NULL payload from Chrome websocket'
+                );
             }
             $data = json_decode($response, true);
 
