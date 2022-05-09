@@ -164,6 +164,7 @@ class ChromePage extends DevToolsConnection
                     $this->setPageReady(FALSE, $data['method']);
                 break;
                 case 'Page.navigatedWithinDocument':
+                case 'Page.loadEventFired':
                 case 'Page.frameStoppedLoading':
                     $this->setPageReady(TRUE, $data['method']);
                     break;
