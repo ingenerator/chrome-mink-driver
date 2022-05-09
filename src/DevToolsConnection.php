@@ -4,6 +4,7 @@ namespace DMore\ChromeDriver;
 use Behat\Mink\Exception\DriverException;
 use WebSocket\Client;
 use WebSocket\ConnectionException;
+use WebSocket\TimeoutException;
 
 abstract class DevToolsConnection
 {
@@ -27,14 +28,13 @@ abstract class DevToolsConnection
 
     public function canDevToolsConnectionBeEstablished()
     {
-        $url = $this->getUrl() . "/json/version";
-        $c = curl_init($url);
-        curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
-        $s = curl_exec($c);
-        curl_close($c);
-
-        return $s !== false && strpos($s, 'Chrome') !== false;
+        // It would need instead to get & call the HTTP API url, but it's actually pointless to do that anyway
+        // because realistically in almost every case the connection has only timed out because Chrome has nothing
+        // to say and connecting to an HTTP API endpoint doesn't really tell us anything anyway.
+        throw new \BadMethodCallException(
+            __METHOD__.
+            ' has been removed because it always returned false due to adding a path to the end of the websocket URL'
+        );
     }
 
     protected function getUrl()
@@ -85,22 +85,62 @@ abstract class DevToolsConnection
         return ['result' => ['type' => 'undefined']];
     }
 
-    protected function waitFor(callable $is_ready, string $debug_reason)
+    protected function waitFor(callable $is_ready, string $debug_reason, ?\DateTimeImmutable $timeout = NULL)
     {
         $data = [];
-        while (true) {
+        while (TRUE) {
+            if ($timeout && (new \DateTimeImmutable > $timeout)) {
+                // Sometimes the socket itself doesn't time out (e.g. if a page is sending AJAX requests
+                // on a timer of some kind but the `load` event has never fired). I'm still not clear on
+                // underlying cause of us never getting to page load status, but we definitely don't want this
+                // to loop infinitely until build timeout.
+                throw new DriverException(
+                    'Timed out waiting for Chrome state - websocket is healthy'
+                );
+            }
+
             try {
                 $response = $this->client->receive();
-            } catch (ConnectionException $exception) {
+            } catch (TimeoutException $exception) {
                 $this->logger->logConnectionException($this, $exception, $debug_reason);
-                $message = $exception->getMessage();
-                if (false !== strpos($message, 'Empty read; connection dead?')) {
-                    throw $exception;
+
+                // A stream read timeout generally just happens when Chrome has nothing to report for the duration
+                // of the stream timeout. This may mean that:
+                // a) the page is idle & waiting on user action / a timer to trigger some action
+                // b) a server-side pageload has taken unusually long (there are no websocket packets while the main
+                //    document request is pending, so if the server-side pageload takes longer than the socket timeout
+                //    then you will always get a read timeout.
+                // c) a page is loading but e.g. a child request is hanging so again there is no activity to report
+                //    and no events to fire.
+                if ($timeout && ($timeout > new \DateTimeImmutable)) {
+                    // We are still within the application level timeout that the caller provided. Just retry reading
+                    continue;
                 }
 
-                $state = $exception->getData();
+                // If the caller did not provide a timeout, then we should not retry and should just throw.
+                throw new DriverException(
+                    sprintf(
+                        'Timed out reading from Chrome: %s %s',
+                        $exception->getMessage(),
+                        \json_encode($exception->getData())
+                    ),
+                    0,
+                    $exception
+                );
+            } catch (ConnectionException $exception) {
+                $this->logger->logConnectionException($this, $exception, $debug_reason);
 
-                throw new StreamReadException($state['eof'], $state['timed_out'], $state['blocked']);
+                // These are not just a simple timeout, they represent a more failure error on the socket, treat them
+                // as outright failures and just rethrow.
+                throw new DriverException(
+                    sprintf(
+                        'Error reading from Chrome: %s (%s)',
+                        $exception->getMessage(),
+                        \json_encode($exception->getData())
+                    ),
+                    0,
+                    $exception
+                );
             }
 
             if (is_null($response)) {

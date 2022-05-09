@@ -2,7 +2,6 @@
 namespace DMore\ChromeDriver;
 
 use Behat\Mink\Exception\DriverException;
-use WebSocket\ConnectionException;
 
 class ChromePage extends DevToolsConnection
 {
@@ -56,24 +55,17 @@ class ChromePage extends DevToolsConnection
     {
         if (!$this->page_ready) {
             try {
+                // @todo: need a better way of setting the timeout expiry based on the start of pageload rather than specific call
+                $timeout = new \DateTimeImmutable('+30 seconds');
                 $this->waitFor(function () {
                     return $this->page_ready;
-                }, 'wait-for-load');
-            } catch (StreamReadException $exception) {
-                if ($exception->isTimedOut() && false === $this->canDevToolsConnectionBeEstablished()) {
-                    throw new \RuntimeException(
-                        sprintf(
-                            'Chrome is unreachable via "%s" and might have crashed. Please see docs/troubleshooting.md',
-                            $this->getUrl()
-                        )
-                    );
-                }
-
-                if (!$exception->isEof() && $exception->isTimedOut()) {
-                    $this->waitForLoad();
-                }
-            } catch (ConnectionException $exception) {
-                throw new DriverException("Page not loaded");
+                },
+                    'wait-for-load',
+                    $timeout
+                );
+            } catch (DriverException $exception) {
+                // This could then be decorated with more detail on what we're waiting for
+                throw new DriverException("Page not loaded: ".$exception->getMessage(), 0, $exception);
             }
         }
     }

@@ -97,7 +97,7 @@ class ChromeBrowser extends DevToolsConnection
     {
         if ($this->headless) {
             if (!$this->send('Target.disposeBrowserContext', ['browserContextId' => $this->context_id])) {
-                throw new ConnectionException('Unable to close browser context');
+                throw new DriverException('Unable to close browser context');
             }
         }
         parent::close();

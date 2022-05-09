@@ -60,6 +60,7 @@ class ChromeDriverDebugLogger
             [
                 'client'  => $this->nameConnection($connection),
                 'action'  => 'connectionException',
+                'class'   => \get_class($exception),
                 'waiting' => $wait_reason,
                 'message' => $exception->getMessage(),
                 'data'    => $exception->getData(),

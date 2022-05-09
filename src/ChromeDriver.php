@@ -142,7 +142,6 @@ class ChromeDriver extends CoreDriver
             $this->browser->close();
         } catch (ConnectionException $exception) {
         } catch (DriverException $exception) {
-        } catch (StreamReadException $exception) {
         }
 
         $this->is_started = false;
