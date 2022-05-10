@@ -241,8 +241,10 @@ class ChromeDriver extends CoreDriver
         }
         $this->switchToWindow($this->main_window);
         $this->page->reset();
-        $this->request_headers = [];
-        $this->sendRequestHeaders();
+        if ($this->request_headers !== []) {
+            $this->request_headers = [];
+            $this->sendRequestHeaders();
+        }
     }
 
     /**
