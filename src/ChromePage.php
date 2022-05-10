@@ -16,6 +16,8 @@ class ChromePage extends DevToolsConnection
 
     private bool $is_recovering_from_crash = false;
 
+    private ?\DateTimeImmutable $page_ready_timeout = NULL;
+
     public function __construct(
         private string $window_id,
         $url,
@@ -57,13 +59,11 @@ class ChromePage extends DevToolsConnection
     {
         if (!$this->page_ready) {
             try {
-                // @todo: need a better way of setting the timeout expiry based on the start of pageload rather than specific call
-                $timeout = new \DateTimeImmutable('+30 seconds');
                 $this->waitFor(function () {
                     return $this->page_ready;
                 },
                     'wait-for-load',
-                    $timeout
+                    $this->page_ready_timeout
                 );
             } catch (DriverException $exception) {
                 // This could then be decorated with more detail on what we're waiting for
@@ -314,6 +314,13 @@ class ChromePage extends DevToolsConnection
         if (!$state) {
             // Clear the response ahead of loading a new doc
             $this->response = null;
+            // Set a timeout from when the page went "not ready" so it's not affected by multiple calls to waitForLoad
+            // e.g. after an exception during loading the page.
+            // @todo: pageload expiry time should be configurable
+            $this->page_ready_timeout = new \DateTimeImmutable('+30 seconds');
+        } else {
+            // Clear the timeout for the next load
+            $this->page_ready_timeout = NULL;
         }
         $this->logger->logPageReadyStateChange($state, $change_trigger);
         $this->page_ready = $state;
