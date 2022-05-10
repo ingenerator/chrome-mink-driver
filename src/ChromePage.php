@@ -179,7 +179,22 @@ class ChromePage extends DevToolsConnection
                     }
                     break;
                 case 'Page.navigatedWithinDocument':
-                    // Can't see this doing anything if we're only starting the pageload on the networky events
+                    // On a same-page navigation in at least some instances - e.g. in the flickr photoset page where it
+                    // uses history.replaceState - you get:
+                    // - potentially some animationy stuff
+                    // - Page.frameStartedLoading
+                    // - Page.navigatedWithinDocument
+                    // - Page.frameStoppedLoading
+
+                    // But no Page.loadEventFired.
+                    // At the moment I'm marking page_ready = False on Page.frameStartedLoading, so need to clear it
+                    // here. If I used Page.frameStoppedLoading instead of Page.loadEventFired this would maybe not
+                    // be necessary.
+                    // This is another example where we want click-> to wait a bit to see if something happens, but
+                    // it can't just wait for readyState to change because that may not change (it doesn't in this case).
+                    if ($data['params']['frameId'] === $this->window_id) {
+                        $this->setPageReady(TRUE, $data['method']);
+                    }
                     break;
 
                 case 'Page.loadEventFired':
