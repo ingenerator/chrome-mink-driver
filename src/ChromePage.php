@@ -5,8 +5,6 @@ use Behat\Mink\Exception\DriverException;
 
 class ChromePage extends DevToolsConnection
 {
-    /** @var array */
-    private $pending_requests = [];
     /** @var bool */
     private $page_ready = true;
     /** @var array https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Response */
@@ -45,12 +43,6 @@ class ChromePage extends DevToolsConnection
 
     public function visit($url)
     {
-        if (count($this->pending_requests) > 0) {
-            $this->waitFor(function () {
-                return count($this->pending_requests) == 0;
-            }, 'before-visit');
-        }
-        $this->response = null;
         $this->setPageReady(FALSE, __METHOD__);
         $this->send('Page.navigate', ['url' => $url]);
     }
@@ -120,21 +112,12 @@ class ChromePage extends DevToolsConnection
 
     private function waitForHttpResponse()
     {
-        if (null === $this->response) {
-            $parameters = ['expression' => 'document.readyState == "complete"'];
-            $domReady = $this->send('Runtime.evaluate', $parameters)['result']['value'];
-            if (count($this->pending_requests) == 0 && $domReady) {
-                $this->response = [
-                    'status' => 200,
-                    'headers' => [],
-                ];
-                return;
-            }
-
-            $this->waitFor(function () {
-                return NULL !== $this->response && count($this->pending_requests) == 0;
-            }, 'wait-for-http-response');
-        }
+        // Do we actually need to do anything cleverer than waiting for tha page to load...???
+        $this->waitFor(
+            fn() => $this->response !== NULL,
+            'wait-http-response',
+            new \DateTimeImmutable('+30 seconds')
+        );
     }
 
     /**
@@ -153,20 +136,19 @@ class ChromePage extends DevToolsConnection
                     // Nothing specific to do here, just ignore it
                     break;
                 case 'Network.requestWillBeSent':
-                    if ($data['params']['type'] == 'Document') {
-                        $this->pending_requests[$data['params']['requestId']] = true;
-                    }
+                    // Think we don't need to worry about this and can just rely on `->response` being set alongside page_ready?
                     break;
                 case 'Network.responseReceived':
-                    if ($data['params']['type'] == 'Document') {
-                        unset($this->pending_requests[$data['params']['requestId']]);
+                    if (
+                        ($data['params']['type'] == 'Document')
+                        &&
+                        ($data['params']['frameId'] === $this->window_id)
+                    ) {
                         $this->response = $data['params']['response'];
                     }
                     break;
                 case 'Network.loadingFailed':
-                    if ($data['params']['canceled']) {
-                        unset($this->pending_requests[$data['params']['requestId']]);
-                    }
+                    // No longer need to track pending requests, I think?
                     break;
                 case 'Page.frameNavigated':
                     // Ignore, it duplicates frameStartedLoading so far as I can see!
@@ -329,6 +311,10 @@ class ChromePage extends DevToolsConnection
 
     private function setPageReady(bool $state, string $change_trigger): void
     {
+        if (!$state) {
+            // Clear the response ahead of loading a new doc
+            $this->response = null;
+        }
         $this->logger->logPageReadyStateChange($state, $change_trigger);
         $this->page_ready = $state;
     }
