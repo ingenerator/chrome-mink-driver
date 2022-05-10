@@ -177,8 +177,10 @@ class ChromeDriver extends CoreDriver
             $this->deleteAllCookies();
             $this->connectToWindow($this->main_window);
             $this->page->reset();
-            $this->request_headers = [];
-            $this->sendRequestHeaders();
+            if ($this->request_headers !== []) {
+                $this->request_headers = [];
+                $this->sendRequestHeaders();
+            }
         } catch (DriverException $e) {
             \fwrite(
                 STDOUT,
