@@ -215,8 +215,23 @@ class ChromeDriver extends CoreDriver
      */
     public function getCurrentUrl()
     {
-        $this->page->waitUntilFullyLoaded();
-        return $this->evaluateScript('window.location.href');
+        // Don't use Runtime.evaluate or waitForLoad here, it makes the method vastly more brittle and means we can't
+        // get the URL even if the target has crashed. And I think is why then timing out to be able to Runtime.evaluate
+        // makes the build run for ever because the pre-scenario hooks get a 90 second timeout on checking the current
+        // URL.
+        // Our other option here would be to just capture the URL on Page.frameNavigated and
+        // Page.frameNavigatedWithinDocument so that we can just return the most-recently-known
+        // value to the caller without any waiting or anything.
+        $windows = json_decode($this->http_client->get($this->api_url.'/json/list'), TRUE);
+
+        foreach ($windows as $window) {
+            if ($window['id'] == $this->current_window) {
+                return $window['url'];
+            }
+        }
+        throw new DriverException(
+            'Could not identify current URL, our window '.$this->current_window.' is not listed in chrome /json/list'
+        );
     }
 
     /**
