@@ -69,6 +69,21 @@ class ChromeDriverDebugLogger
         );
     }
 
+    public function logAnyException(
+        string     $custom_msg,
+        \Exception $exception
+    ) {
+        $this->writeLog(
+            [
+                'action'     => 'genericException',
+                'class'      => \get_class($exception),
+                'custom_msg' => $custom_msg,
+                'message'    => $exception->getMessage(),
+                'trace'      => $exception->getTraceAsString(),
+            ]
+        );
+    }
+
     private function writeLog(array $vars)
     {
         static $last_logged;
