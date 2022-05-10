@@ -16,6 +16,14 @@ class ChromePage extends DevToolsConnection
     /** @var callable */
     private $javascript_dialog_handler;
 
+    public function __construct(
+        private string $window_id,
+        $url,
+        $socket_timeout = NULL
+    ) {
+        parent::__construct($url, $socket_timeout);
+    }
+
     public function connect($url = null)
     {
         parent::connect();
@@ -159,14 +167,29 @@ class ChromePage extends DevToolsConnection
                     }
                     break;
                 case 'Page.frameNavigated':
-                case 'Page.loadEventFired':
+                    // Ignore, it duplicates frameStartedLoading so far as I can see!
+                    break;
                 case 'Page.frameStartedLoading':
-                    $this->setPageReady(FALSE, $data['method']);
-                break;
+                    // Page.frameStartedLoading comes *after* the main document has completed if calling the Page.navigate
+                    // devtools method, or *before* if clicking / script-initiated nav in the UI.
+                    // So I'm not convinced we should use this at all
+                    // Really for the quickest solution should we just set it page_ready=false on net.requestWillBeSent with type of document?
+                    if ($data['params']['frameId'] === $this->window_id) {
+                        $this->setPageReady(FALSE, $data['method']);
+                    }
+                    break;
                 case 'Page.navigatedWithinDocument':
+                    // Can't see this doing anything if we're only starting the pageload on the networky events
+                    break;
+
                 case 'Page.loadEventFired':
-                case 'Page.frameStoppedLoading':
+                    // I am tempted to *only* look at loadEventFired to know when the page is fully loaded and ready to
+                    // use.
                     $this->setPageReady(TRUE, $data['method']);
+                    break;
+                case 'Page.frameStoppedLoading':
+                    // I don't think this is really necessary either, it fires after Page.loadEventFired sometimes, but
+                    // not always....
                     break;
                 case 'Inspector.targetCrashed':
                     throw new DriverException('Browser crashed');
@@ -269,6 +292,16 @@ class ChromePage extends DevToolsConnection
         // If we make it that the page only goes ready on the `frameStoppedLoading` event, that follows the `load`
         // event so by definition document.readyState === complete by that point and there is no need to check it again
         // and we may just be able to do waitForLoad and leave it at that.
+
+        // BUT what we do have to do is make sure we have read any pending messages off the websocket. If this is
+        // after a click, we will have slept 50ms (yuk) to see what it did, but we can't go straight to `waitForLoad`
+        // without reading messages off the queue otherwise we will not yet know that the page is loading. Sending
+        // Runtime.evaluate kinda works but really it could literally be anything and I have seen Runtime.evaluate
+        // fail on a crashed target. We literally just need something that will flush the queue through, preferably
+        // without the sleep. We can't just do a waitFor() the first event because if this was after a click that
+        // e.g. opened a modal then there may not be any events queued and we'd have to wait till socket timeout to
+        // find that out.
+        $this->send('Runtime.evaluate', ['expression'=> 'document.readyState']);
 
         $this->waitForLoad();
     }

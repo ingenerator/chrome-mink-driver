@@ -1467,7 +1467,11 @@ JS;
 
         foreach ($windows as $window) {
             if ($window['id'] == $window_id) {
-                $this->page = new ChromePage($window['webSocketDebuggerUrl'], isset($this->options['socketTimeout']) ? $this->options['socketTimeout'] : 10);
+                $this->page = new ChromePage(
+                    $window_id,
+                    $window['webSocketDebuggerUrl'],
+                    isset($this->options['socketTimeout']) ? $this->options['socketTimeout'] : 10
+                );
                 $this->page->connect();
                 $this->current_window = $window_id;
                 $this->document = 'document';
