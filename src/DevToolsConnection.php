@@ -2,13 +2,13 @@
 namespace DMore\ChromeDriver;
 
 use Behat\Mink\Exception\DriverException;
-use WebSocket\Client;
+use WebSocket\Client as WebsocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
 abstract class DevToolsConnection
 {
-    /** @var Client */
+    /** @var WebsocketClient */
     private $client;
     /** @var int */
     private $command_id = 1;
@@ -49,7 +49,7 @@ abstract class DevToolsConnection
         if (is_numeric($this->socket_timeout) && $this->socket_timeout > 0) {
             $options['timeout'] = (int) $this->socket_timeout;
         }
-        $this->client = new Client($url, $options);
+        $this->client = new ConnLoggingWebsocketClient($url, $options);
     }
 
     public function close()
@@ -178,4 +178,22 @@ abstract class DevToolsConnection
      * @return void
      */
     abstract protected function processResponse(array $data):void;
+}
+
+class ConnLoggingWebsocketClient extends WebsocketClient
+{
+    private $conn_count = 0;
+
+    protected function connect(): void
+    {
+        $this->conn_count++;
+        if ($this->conn_count > 1) {
+            ChromeDriverDebugLogger::instance()->logAnyException(
+                'Chrome socket connection reopened (#'.$this->conn_count.')',
+                new \RuntimeException('Socket re-connected?')
+            );
+        }
+        parent::connect();
+    }
+
 }
