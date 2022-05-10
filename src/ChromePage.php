@@ -16,6 +16,8 @@ class ChromePage extends DevToolsConnection
     /** @var callable */
     private $javascript_dialog_handler;
 
+    private bool $is_recovering_from_crash = false;
+
     public function __construct(
         private string $window_id,
         $url,
@@ -207,7 +209,43 @@ class ChromePage extends DevToolsConnection
                     // not always....
                     break;
                 case 'Inspector.targetCrashed':
+                    // Chrome has actually crashed (or been OOM killed or whatever). In this case it looks like:
+                    // - attempting to send Runtime.evaluate or similar will succeed on the send, but will not actually
+                    //   return a response. So you get timeouts on any waitFor after the send
+                    // - then, when you eventually run Page.navigate (for cleanup, or a next scenario, that starts the
+                    //   page reloading. At that point any queued commands from *before* the navigation will return
+                    //   with {"error": {"code": -32000, "message": "Target crashed"}}.
+                    // - of course that reply now comes in while we are waiting for Page.navigate so it looks like that
+                    //   is what failed, so the scenario moves on to more stuff. If there were multiple Runtime.evaluate
+                    //   queued into the crashed target, then they will be dequeued and fail subsequent commands in
+                    //   sequence.
+                    // - So we actually need to make sure we handle the `targetCrashed` properly *first*, so that we
+                    //   can get the page back interactive again before any more commands run.
+                    // - I *think* we can do that by navigating to about:blank and then waiting for
+                    //   Inspector.targetReloadedAfterCrash which follows the navigation attempt - though it seems like
+                    //   there could be edge cases in this scenario....
+                    // See http://www.edbookfest.test/chrome-logs.php?log=1e5d0d6b-f86a-46b4-8f09-5495280d021e-chromedriver-debug.log.jsonl&p=119
+                    $this->is_recovering_from_crash = TRUE;
+                    try {
+                        // Don't use the normal visit() here, we need to keep the scope for unexpected calls tiny
+                        $this->send('Page.navigate', ['url' => 'about:blank']);
+                        $this->waitFor(
+                            // We'll be ready to move on when about:blank has loaded *and* the Inspector.targetReloadedAfterCrash has fired
+                            fn() => $this->page_ready && ! $this->is_recovering_from_crash,
+                            'recover-from-crash',
+                            new \DateTimeImmutable('+30 seconds')
+                        );
+                    } catch (\Exception $e) {
+                        throw new DriverException(
+                            sprintf('Browser crashed, and failed to recover: [%s] %s', \get_class($e), $e->getMessage())
+                        );
+                    }
+
+                    // Whatever happens though we still need to fail *this* step, as we are now on about:blank
                     throw new DriverException('Browser crashed');
+                case 'Inspector.targetReloadedAfterCrash':
+                    // A crash was handled, the waiter can stop waiting now
+                    $this->is_recovering_from_crash = FALSE;
                     break;
                 case 'Animation.animationStarted':
                     if (!empty($data['params']['source']['duration'])) {
