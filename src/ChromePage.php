@@ -18,6 +18,8 @@ class ChromePage extends DevToolsConnection
 
     private ?\DateTimeImmutable $page_ready_timeout = NULL;
 
+    private bool $has_navigated_since_reset = FALSE;
+
     public function __construct(
         private string $window_id,
         $url,
@@ -39,10 +41,19 @@ class ChromePage extends DevToolsConnection
 
     public function reset()
     {
-        $this->response                  = null;
-        $this->javascript_dialog_handler = null;
-        $this->visit('about:blank', new \DateTimeImmutable('+5 seconds'));
-        $this->waitForLoad();
+        $this->response                  = NULL;
+        $this->javascript_dialog_handler = NULL;
+        if ( ! $this->has_navigated_since_reset) {
+            // We only need to go back to about:blank if the scenario has ever done anything. If this was a non-JS
+            // scenario it will have navigated other browsers.
+            return;
+        }
+        try {
+            $this->visit('about:blank', new \DateTimeImmutable('5 seconds'));
+            $this->waitForLoad();
+        } finally {
+            $this->has_navigated_since_reset = FALSE;
+        }
     }
 
     public function visit($url, ?\DateTimeImmutable $timeout = NULL)
@@ -315,6 +326,7 @@ class ChromePage extends DevToolsConnection
 
     private function setPageReady(bool $state, string $change_trigger): void
     {
+        $this->has_navigated_since_reset = TRUE;
         if (!$state) {
             // Clear the response ahead of loading a new doc
             $this->response = null;
