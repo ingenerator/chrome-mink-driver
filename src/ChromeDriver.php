@@ -130,6 +130,7 @@ class ChromeDriver extends CoreDriver
      */
     public function stop()
     {
+        // SEE ALSO implementation of forcePageResetOrRestartDriver
         $this->ensureStarted();
         try {
             $this->reset();
@@ -171,12 +172,19 @@ class ChromeDriver extends CoreDriver
      */
     public function reset()
     {
+        // Sometimes Chrome gets into a bonkers state where the page seems to hang and even Page.navigate doesn't return
+        // a response until the next time you call Page.navigate, at which time we get a net::ERR_ABORTED for the
+        // previous for no apparent reason. That will then continue to happen for *every* Page.navigate command for the
+        // rest of the run - even though the socket is quite happy and still accepts and responds to the
+        // Network.clearBrowserCookies.
         try {
             $this->ensureStarted();
             $this->document = 'document';
             $this->deleteAllCookies();
             $this->connectToWindow($this->main_window);
-            $this->page->reset();
+
+            $this->forcePageResetOrRestartDriver();
+
             if ($this->request_headers !== []) {
                 $this->request_headers = [];
                 $this->sendRequestHeaders();
@@ -189,6 +197,34 @@ class ChromeDriver extends CoreDriver
             ChromeDriverDebugLogger::instance()->logDriverException($e, 'Failed to reset');
             // What happens if we just allow the scenario to continue here????
         }
+    }
+
+    private function forcePageResetOrRestartDriver()
+    {
+        try {
+            $this->page->reset();
+            return;
+        } catch (DriverException $e) {
+            \fwrite(
+                STDOUT,
+                sprintf(
+                    "ERROR: Failed to reset page [%s] %s - stopping & restarting",
+                    \get_class($e),
+                    $e->getMessage()
+                )
+            );
+            ChromeDriverDebugLogger::instance()->logDriverException($e, 'When resetting to about:blank');
+        }
+
+        // If we got here then visiting about:blank failed
+        $this->page->close();
+        $this->http_client->get($this->api_url.'/json/close/'.$this->current_window);
+        $this->browser->close();
+        $this->is_started = FALSE;
+
+        // And now restart
+        $this->start();
+        $this->connectToWindow($this->main_window);
     }
 
     /**

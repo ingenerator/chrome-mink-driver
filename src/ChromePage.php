@@ -41,12 +41,15 @@ class ChromePage extends DevToolsConnection
     {
         $this->response                  = null;
         $this->javascript_dialog_handler = null;
+        $this->visit('about:blank', new \DateTimeImmutable('+5 seconds'));
     }
 
-    public function visit($url)
+    public function visit($url, ?\DateTimeImmutable $timeout = NULL)
     {
         $this->setPageReady(FALSE, __METHOD__);
-        $this->send('Page.navigate', ['url' => $url]);
+        // Page.navigate does not return until after the initial network request so it needs to be able to run for at least as
+        // long as you expect that to take.
+        $this->send('Page.navigate', ['url' => $url], $timeout ?? new \DateTimeImmutable('+30 seconds'));
     }
 
     public function reload()

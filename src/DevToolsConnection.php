@@ -63,7 +63,7 @@ abstract class DevToolsConnection
      * @return null|string|string[][]
      * @throws \Exception
      */
-    public function send($command, array $parameters = [])
+    public function send($command, array $parameters = [], ?\DateTimeImmutable $timeout = NULL)
     {
         $payload['id'] = $this->command_id++;
         $payload['method'] = $command;
@@ -76,7 +76,10 @@ abstract class DevToolsConnection
 
         $data = $this->waitFor(function ($data) use ($payload) {
             return array_key_exists('id', $data) && $data['id'] == $payload['id'];
-        }, 'send-'.$payload['id']);
+        },
+            'send-'.$payload['id'],
+            $timeout
+        );
 
         if (isset($data['result'])) {
             return $data['result'];
