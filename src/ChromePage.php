@@ -37,7 +37,9 @@ class ChromePage extends DevToolsConnection
         // we see deadlocks and the page crashing : could that be because we're not properly async and not reading the
         // socket fast enough for Chrome to keep up?
         // $this->send('Network.enable');
-        $this->send('Animation.enable');
+
+        // Opt out of Animation.enable, it floods with notifications and I don't think we actually need them
+        // $this->send('Animation.enable');
         $this->send('Animation.setPlaybackRate', ['playbackRate' => 100000]);
         $this->send('Console.enable');
     }
@@ -254,11 +256,25 @@ class ChromePage extends DevToolsConnection
                     // A crash was handled, the waiter can stop waiting now
                     $this->is_recovering_from_crash = FALSE;
                     break;
-                case 'Animation.animationStarted':
-                    if (!empty($data['params']['source']['duration'])) {
-                        usleep($data['params']['source']['duration'] * 10);
-                    }
-                    break;
+//              NO LONGER GETS ANIMATION EVENTS
+//              - This was implemented in https://gitlab.com/behat-chrome/chrome-mink-driver/-/commit/b0239834f6ccf8b288903de8af80b64f5a322c6c
+//                and "fixed" in https://gitlab.com/behat-chrome/chrome-mink-driver/-/commit/0b8113f4f98a246634d8608736f82245ab4e6e3c
+//                but in practice the fix actually disabled it, since the key is in fact
+//                $data['response']['params']['animation']['source']['duration']
+//                so this has never actually been sleeping and my hunch is it doesn't need to because
+//                the driver already sets a massive animationPlaybackRate which should make it virtually impossible
+//                to interact with an element during the animation.
+//                Removing this functionality means we can avoid listening for Animation events which are
+//                another big flood aroudn the time of click / pageload etc and might be another cause for
+//                Chrome & the socket struggling to keep up.
+//                If it ever goes back in then need to review the units of the animation duration and whether
+//                multiplying by 10 is vaguely useful in terms of actual execution speed at the forced rate.
+//
+//                case 'Animation.animationStarted':
+//                    if (!empty($data['params']['source']['duration'])) {
+//                        usleep($data['params']['source']['duration'] * 10);
+//                    }
+//                    break;
                 case 'Security.certificateError':
                     if (isset($data['params']['eventId'])) {
                         $this->send('Security.handleCertificateError', ['eventId' => $data['params']['eventId'], 'action' => 'continue']);
