@@ -416,15 +416,15 @@ class ChromePage extends DevToolsConnection
         // event so by definition document.readyState === complete by that point and there is no need to check it again
         // and we may just be able to do waitForLoad and leave it at that.
 
-        // BUT what we do have to do is make sure we have read any pending messages off the websocket. If this is
-        // after a click, we will have slept 50ms (yuk) to see what it did, but we can't go straight to `waitForLoad`
-        // without reading messages off the queue otherwise we will not yet know that the page is loading. Sending
-        // Runtime.evaluate kinda works but really it could literally be anything and I have seen Runtime.evaluate
-        // fail on a crashed target. We literally just need something that will flush the queue through, preferably
-        // without the sleep. We can't just do a waitFor() the first event because if this was after a click that
-        // e.g. opened a modal then there may not be any events queued and we'd have to wait till socket timeout to
-        // find that out.
-        $this->send('Runtime.evaluate', ['expression'=> 'document.readyState']);
+        // BUT what we do have to do is make sure we have read any pending messages off the websocket. We can't go
+        // straight to `waitForLoad` without reading messages off the queue otherwise we will not yet know that the
+        // page is loading. Sending Browser.getVersion shouldn't tax Chrome and I've seen Runtime.evaluate fail on
+        // a crashed target, I'm hoping this can't throw in the same way. We can't just read the socket because if
+        // there's nothing to report that will just give us a timedout read on whatever the socket timeout is.
+
+        // This would ideally be a ping, but I can't send pings just now because the driver doesn't surface the pong
+        // so our wait can't ever respond to it.
+        $this->send('Browser.getVersion');
 
         $this->waitForLoad();
     }
