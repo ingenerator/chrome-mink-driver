@@ -211,6 +211,7 @@ class ChromePage extends DevToolsConnection
                 case 'Page.loadEventFired':
                     // I am tempted to *only* look at loadEventFired to know when the page is fully loaded and ready to
                     // use.
+                    // @todo: should we also wait for Page.domContentEventFired? In some cases that goes *after* Page.loadEventFired
                     $this->setPageReady(TRUE, $data['method']);
                     break;
                 case 'Page.frameStoppedLoading':
@@ -236,6 +237,14 @@ class ChromePage extends DevToolsConnection
                     // See http://www.edbookfest.test/chrome-logs.php?log=1e5d0d6b-f86a-46b4-8f09-5495280d021e-chromedriver-debug.log.jsonl&p=119
                     $this->is_recovering_from_crash = TRUE;
                     try {
+                        // @TODO this is not fully robust because:
+                        // -> if the crash happened while waiting on a command, then we get the `Target Crashed` here
+                        //    in this method.
+                        //    http://www.edbookfest.test/chrome-logs.php?log=70e99413-78a7-4b4f-a82a-d46c47b16796-chromedriver-debug.log.jsonl&p=20
+                        // -> that then prevents us waiting for Inspector.targetReloadedAfterCrash here
+                        // -> so we probably need to either expect those exceptions, or do this lower-level and send the
+                        //    command then wait separately. OR could we do something hacky to just throw away replies
+                        //    to anything before the current command ID????
                         // Don't use the normal visit() here, we need to keep the scope for unexpected calls tiny
                         $this->send('Page.navigate', ['url' => 'about:blank']);
                         $this->waitFor(
