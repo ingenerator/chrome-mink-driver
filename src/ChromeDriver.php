@@ -941,12 +941,7 @@ JS;
                 ];
                 $this->page->send('Input.dispatchMouseEvent', $parameters);
             }
-            // @todo do we always want to sleep 50ms here? What if the click does something in the UI rather than triggering a load?
-            // Also this is kinda tricky as we *know* a click *might* trigger navigation, or it might not, so we can't
-            // mark this as being about to navigate (in the same way we do in visit). So probably we do just have
-            // to wait a moment and see what the click is going to do.
-            usleep(50000);
-            $this->page->waitUntilFullyLoaded();
+            $this->page->waitForPossibleNavigation();
         }
     }
 

@@ -352,6 +352,57 @@ class ChromePage extends DevToolsConnection
         $this->page_ready = $state;
     }
 
+    public function waitForPossibleNavigation():void
+    {
+        // For example, on a `click` one of a few things might happen:
+        // - it might be a normal link / form button and trigger an immediate nav. Usually in that case we will have a
+        //   frameStartedLoading before we've even finished reading the reply to Input.dispatchMouseEvent, but not
+        //   always.
+        // - it might be a link that triggers an only-just-deferred JS action - for example if it's a link with
+        //   an analytics click handler on it that calls e.preventDefault before doing something then setting
+        //   document.location.href shortly after
+        // - it might be a button that triggers some JS validation or more complex behaviour before again using
+        //   document.location.href to navigate.
+        //
+        // The old driver implementation therefore had an explicit 50ms sleep at the end of the `click` method. However
+        // this means we are not reading from the socket right when it's likely to be busy, which might be causing
+        // chrome instability? And means that in the majority of simple navigation cases, we have to wait 50ms before
+        // we start processing the pageload our side, which feels like it's not ideal.
+        //
+        // Instead, send a simple command on the socket for a while with very short sleeps, only until the page starts
+        // loading.
+        //
+        // To be honest, it feels like really it would make more sense that click always returns immediately, and it's
+        // the assertions where you then wait for the page to load (including the potential it might not even have
+        // started yet) but that is very hard to make work in php/synchronous code and the mink interfaces.
+
+        $max_wait_micros = 50_000;
+        $wait_until      = \microtime(TRUE) + ($max_wait_micros / 1_000_000);
+
+        while ($this->page_ready) {
+            // Only need to do this while the page is *ready* - because we are trying to wait until it goes *not ready*
+
+            if (\microtime(TRUE) >= $wait_until) {
+                // We got to the end of the waiting time and the page still isn't navigating, assume therefore the click
+                // triggered some on-page action (modal / UI component / whatever) and return
+                return;
+            }
+
+            // This would ideally be a ping but I can't send pings just now because the driver doesn't surface the pong
+            // I'm assuming Chrome will find this easy to answer even if everything else is broken
+            $this->send('Browser.getVersion');
+
+            if ($this->page_ready) {
+                // Wait for a tiny bit just so we're not totally hammering Chrome with this, but only if we are going
+                // to loop.
+                \usleep(5_000);
+            }
+        }
+
+        // If we get here then the page started loading, so wait for it to complete loading
+        $this->waitForLoad();
+    }
+
     public function waitUntilFullyLoaded(): void
     {
         // $this->wait($this->domWaitTimeout, 'document.readyState == "complete"');
