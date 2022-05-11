@@ -337,7 +337,7 @@ class ChromeDriver extends CoreDriver
                 $condition = "window.latest_popup.location.href != 'about:blank';";
                 $this->wait(2000, $condition);
                 $script = "[window.latest_popup.document.title, window.latest_popup.location.href]";
-                list($title, $href) = $this->evaluateScript($script);
+                [$title, $href] = $this->evaluateScript($script);
 
                 foreach ($this->getWindowNames() as $id) {
                     $info = $this->page->send('Target.getTargetInfo', ['targetId' => $id])['targetInfo'];
@@ -912,7 +912,7 @@ JS;
             $result = $this->runScriptOnXpathElement($xpath, $script);
 
             if ($result !== null) {
-                list($left, $top) = $result;
+                [$left, $top] = $result;
                 $this->page->send('Input.dispatchMouseEvent', ['type' => 'mouseMoved', 'x' => $left, 'y' => $top]);
 
                 $parameters = [
@@ -1028,7 +1028,7 @@ JS;
     public function mouseOver($xpath)
     {
         $this->runScriptOnXpathElement($xpath, 'element.scrollIntoViewIfNeeded()');
-        list($left, $top) = $this->getCoordinatesForXpath($xpath);
+        [$left, $top] = $this->getCoordinatesForXpath($xpath);
         $this->page->send('Input.dispatchMouseEvent', ['type' => 'mouseMoved', 'x' => $left + 1, 'y' => $top + 1]);
     }
 
@@ -1077,12 +1077,12 @@ JS;
      */
     public function dragTo($sourceXpath, $destinationXpath)
     {
-        list($left, $top) = $this->getCoordinatesForXpath($sourceXpath);
+        [$left, $top] = $this->getCoordinatesForXpath($sourceXpath);
         $this->page->send('Input.dispatchMouseEvent', ['type' => 'mouseMoved', 'x' => $left + 1, 'y' => $top + 1]);
         $parameters = ['type' => 'mousePressed', 'x' => $left + 1, 'y' => $top + 1, 'button' => 'left'];
         $this->page->send('Input.dispatchMouseEvent', $parameters);
 
-        list($left, $top) = $this->getCoordinatesForXpath($destinationXpath);
+        [$left, $top] = $this->getCoordinatesForXpath($destinationXpath);
         $this->page->send('Input.dispatchMouseEvent', ['type' => 'mouseMoved', 'x' => $left + 1, 'y' => $top + 1]);
         $parameters = ['type' => 'mouseReleased', 'x' => $left + 1, 'y' => $top + 1, 'button' => 'left'];
         $this->page->send('Input.dispatchMouseEvent', $parameters);
@@ -1194,7 +1194,7 @@ JS;
     public function maximizeWindow($name = null)
     {
         if (true === $this->browser->isHeadless()) {
-            list($width, $height) = $this->evaluateScript('[screen.width, screen.height]');
+            [$width, $height] = $this->evaluateScript('[screen.width, screen.height]');
             $this->setVisibleSize($width, $height);
         } else {
             $this->page->send('Browser.setWindowBounds', ['windowId' => 1, 'bounds' => ['windowState' => 'maximized']]);
@@ -1429,7 +1429,7 @@ JS;
     [rect.left, rect.top, rect.width, rect.height]
 JS;
 
-        list($left, $top, $width, $height) = $this->evaluateScript($expression);
+        [$left, $top, $width, $height] = $this->evaluateScript($expression);
         return [ceil($left), ceil($top), floor($width), floor($height)];
     }
 
