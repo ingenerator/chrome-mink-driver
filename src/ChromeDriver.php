@@ -217,9 +217,15 @@ class ChromeDriver extends CoreDriver
         }
 
         // If we got here then visiting about:blank failed
-        $this->page->close();
-        $this->http_client->get($this->api_url.'/json/close/'.$this->current_window);
-        $this->browser->close();
+        try {
+            $this->page->close();
+            $this->http_client->get($this->api_url.'/json/close/'.$this->current_window);
+            $this->browser->close();
+        } catch (ConnectionException $e) {
+            ChromeDriverDebugLogger::instance()->logAnyException('When closing page', $e);
+        } catch (DriverException $e) {
+            ChromeDriverDebugLogger::instance()->logAnyException('When closing page', $e);
+        }
         $this->is_started = FALSE;
 
         // And now restart

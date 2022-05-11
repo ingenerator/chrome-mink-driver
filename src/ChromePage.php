@@ -42,6 +42,7 @@ class ChromePage extends DevToolsConnection
         $this->response                  = null;
         $this->javascript_dialog_handler = null;
         $this->visit('about:blank', new \DateTimeImmutable('+5 seconds'));
+        $this->waitForLoad();
     }
 
     public function visit($url, ?\DateTimeImmutable $timeout = NULL)
