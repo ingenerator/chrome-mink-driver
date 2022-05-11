@@ -4,6 +4,7 @@ namespace DMore\ChromeDriver;
 use Behat\Mink\Driver\CoreDriver;
 use Behat\Mink\Exception\DriverException;
 use Behat\Mink\Exception\ElementNotFoundException;
+use Behat\Mink\Exception\UnsupportedDriverActionException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use WebSocket\ConnectionException;
 
@@ -421,6 +422,7 @@ JS;
      */
     public function getResponseHeaders()
     {
+        throw new UnsupportedDriverActionException('%s does not support getting response headers', $this);
         return $this->page->getResponse()['headers'];
     }
 
@@ -493,6 +495,7 @@ JS;
      */
     public function getStatusCode()
     {
+        throw new UnsupportedDriverActionException('%s does not support getting response headers', $this);
         return $this->page->getResponse()['status'];
     }
 

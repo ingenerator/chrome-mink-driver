@@ -33,7 +33,10 @@ class ChromePage extends DevToolsConnection
         parent::connect();
         $this->send('Page.enable');
         $this->send('DOM.enable');
-        $this->send('Network.enable');
+        // Is it any more stable if we opt out of Network events - there are loads of them and right around the times
+        // we see deadlocks and the page crashing : could that be because we're not properly async and not reading the
+        // socket fast enough for Chrome to keep up?
+        // $this->send('Network.enable');
         $this->send('Animation.enable');
         $this->send('Animation.setPlaybackRate', ['playbackRate' => 100000]);
         $this->send('Console.enable');
@@ -127,6 +130,13 @@ class ChromePage extends DevToolsConnection
 
     private function waitForHttpResponse()
     {
+        // Can't throw UnsupportedDriverActionException because that needs a reference to the driver instance
+        throw new \BadMethodCallException(
+        // Because there's a bajillion of them and I've started to wonder if not keeping up with reading that
+        // socket might help.
+            'Getting page response is disabled to allow us to opt out from Network events'
+        );
+
         // Do we actually need to do anything cleverer than waiting for tha page to load...???
         $this->waitFor(
             fn() => $this->response !== NULL,
