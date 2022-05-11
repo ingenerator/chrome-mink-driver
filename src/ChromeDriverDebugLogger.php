@@ -13,6 +13,8 @@ class ChromeDriverDebugLogger
 
     private $page_ready  = NULL;
 
+    private string $log_file;
+
     public static function instance(): ChromeDriverDebugLogger
     {
         static $instance;
@@ -23,9 +25,14 @@ class ChromeDriverDebugLogger
         return $instance;
     }
 
-    public function __construct()
+    private function __construct()
     {
-
+        // Use a unique file so it survives --rerun
+        $now            = new \DateTimeImmutable;
+        $this->log_file = sprintf(
+            PROJECT_BASE_DIR.'/build/logs/chromedriver-debug.%s.log.jsonl',
+            $now->format('Y-m-d-H-i-s-u')
+        );
     }
 
     public function logCommandSent(DevToolsConnection $connection, array $payload): void
@@ -105,7 +112,7 @@ class ChromeDriverDebugLogger
         $last_logged = $now;
 
         \file_put_contents(
-            PROJECT_BASE_DIR.'/build/logs/chromedriver-debug.log.jsonl',
+            $this->log_file,
             JSON::encode($vars, FALSE)."\n",
             FILE_APPEND
         );
