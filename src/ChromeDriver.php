@@ -144,7 +144,6 @@ class ChromeDriver extends CoreDriver
         }
 
         if (isset($this->options['validateCertificate']) && $this->options['validateCertificate'] === false) {
-            $this->page->send('Security.enable');
             $this->page->send('Security.setIgnoreCertificateErrors', ['ignore' => true]);
         }
     }

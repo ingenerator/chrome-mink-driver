@@ -231,15 +231,6 @@ class ChromePage extends DevToolsConnection
                     break;
                 case 'Inspector.targetCrashed':
                     throw new DriverException('Browser crashed');
-                case 'Security.certificateError':
-                    if (isset($data['params']['eventId'])) {
-                        $this->send(
-                            'Security.handleCertificateError',
-                            ['eventId' => $data['params']['eventId'], 'action' => 'continue']
-                        );
-                        $this->page_ready = false;
-                    }
-                    break;
                 case 'Console.messageAdded':
                     $this->console_messages[] = $data['params']['message'];
                     break;
