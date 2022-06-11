@@ -116,11 +116,6 @@ class ChromeBrowser extends DevToolsConnection
 
         $json = $this->http_client->get($this->http_uri . '/json/new');
         $response = json_decode($json, true);
-        $debug = [
-            'response[id] type' => get_class($response['id']),
-            'response' => $response,
-        ];
-        print_r($response);
         return $response['id'];
     }
 
