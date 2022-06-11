@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2.9.0
+
+* Throw DriverException if file to be uploaded is not found (#12, !128)
+
 ## 2.8.0
 
 * Improved support for Behat 1.8.x, fixes to CI (!93, #94, #104)
