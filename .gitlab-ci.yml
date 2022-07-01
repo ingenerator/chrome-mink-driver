@@ -28,7 +28,7 @@ GrumPHP:
   stage: lint
   tags: [docker]
   script:
-    - composer require phpro/grumphp ergebnis/composer-normalize enlightn/security-checker --prefer-dist --ansi --no-progress --sort-packages
+    - composer require --dev --prefer-dist --ansi --no-progress --sort-packages phpro/grumphp-shim ergebnis/composer-normalize enlightn/security-checker
     - vendor/bin/grumphp run -n
 
 PHP 7.2:

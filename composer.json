@@ -35,5 +35,11 @@
         "psr-4": {
             "DMore\\ChromeDriverTests\\": "tests/"
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "ergebnis/composer-normalize": true,
+            "phpro/grumphp-shim": true
+        }
     }
 }

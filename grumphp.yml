@@ -1,4 +1,6 @@
 grumphp:
+    git_hook_variables:
+        EXEC_GRUMPHP_COMMAND: lando
     tasks:
         composer: ~
         composer_normalize: ~
