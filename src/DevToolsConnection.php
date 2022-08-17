@@ -136,30 +136,33 @@ abstract class DevToolsConnection
                 $response = $this->client->receive();
             } catch (ConnectionException $exception) {
                 $message = $exception->getMessage();
-                if (false !== strpos($message, 'Empty read; connection dead?')) {
-                    throw $exception;
+                if ($json = mb_substr($message, strpos($message, '{'))) {
+                    if ($state = json_decode($json, true)) {
+                        throw new StreamReadException($message, 101, $state, $exception);
+                    }
                 }
-
-                $state = json_decode(substr($message, strpos($message, '{')), true);
-                throw new StreamReadException($state['eof'], $state['timed_out'], $state['blocked']);
+                throw $exception;
             }
+
             if (is_null($response)) {
                 return null;
             }
-            $data = json_decode($response, true);
 
-            if (array_key_exists('error', $data)) {
-                $message = isset($data['error']['data']) ?
-                    $data['error']['message'] . '. ' . $data['error']['data'] : $data['error']['message'];
-                throw new DriverException($message, $data['error']['code']);
-            }
+            if ($data = json_decode($response, true)) {
+                if (array_key_exists('error', $data)) {
+                    $message = isset($data['error']['data']) ?
+                        $data['error']['message'] . '. ' . $data['error']['data'] : $data['error']['message'];
+                    throw new DriverException($message, $data['error']['code']);
+                }
 
-            if ($this->processResponse($data)) {
-                break;
-            }
+                // What's this doing?
+                if ($this->processResponse($data)) {
+                    break;
+                }
 
-            if ($is_ready($data)) {
-                break;
+                if ($is_ready($data)) {
+                    break;
+                }
             }
         }
 

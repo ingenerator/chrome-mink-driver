@@ -4,6 +4,7 @@ Changelog
 ## 2.9.0
 
 * Throw DriverException if file to be uploaded is not found (#12, !128)
+* ConnectionException / StreamReadException handling improvements (!133, #68, #99, #119)
 
 ## 2.8.0
 
