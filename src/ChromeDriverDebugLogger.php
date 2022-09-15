@@ -24,7 +24,7 @@ class ChromeDriverDebugLogger
         return static::$instance;
     }
 
-    public function initialise(string $log_dir)
+    public static function initialise(string $log_dir)
     {
         // Use a unique file so it survives --rerun
         $now = new \DateTimeImmutable;
