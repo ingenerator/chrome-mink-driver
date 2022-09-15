@@ -13,26 +13,29 @@ class ChromeDriverDebugLogger
 
     private $page_ready  = NULL;
 
-    private string $log_file;
+    private static ChromeDriverDebugLogger $instance;
 
     public static function instance(): ChromeDriverDebugLogger
     {
-        static $instance;
-        if ( ! $instance) {
-            $instance = new static;
+        if ( ! isset(static::$instance)) {
+            throw new \RuntimeException('Init '.__CLASS__.' in your bootstrap-behat with a log file path to use');
         }
 
-        return $instance;
+        return static::$instance;
     }
 
-    private function __construct()
+    public function initialise(string $log_dir)
     {
         // Use a unique file so it survives --rerun
-        $now            = new \DateTimeImmutable;
-        $this->log_file = sprintf(
-            PROJECT_BASE_DIR.'/build/logs/chromedriver-debug.%s.log.jsonl',
-            $now->format('Y-m-d-H-i-s-u')
+        $now = new \DateTimeImmutable;
+
+        static::$instance = new static(
+            sprintf('%s/chromedriver-debug.%s.log.jsonl', $log_dir, $now->format('Y-m-d-H-i-s-u'))
         );
+    }
+
+    private function __construct(private string $log_file)
+    {
     }
 
     public function logCommandSent(DevToolsConnection $connection, array $payload): void
