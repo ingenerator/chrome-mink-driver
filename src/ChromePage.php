@@ -215,8 +215,17 @@ class ChromePage extends DevToolsConnection
                     $this->setPageReady(TRUE, $data['method']);
                     break;
                 case 'Page.frameStoppedLoading':
-                    // I don't think this is really necessary either, it fires after Page.loadEventFired sometimes, but
-                    // not always....
+                    // This fires after Page.loadEventFired sometimes, but not always (I think).
+                    // The big case where it fires *without* Page.loadEventFired is if you set window.location.href to a URL that is
+                    // served as a download, in that case it seems we get:
+                    // - Page.frameScheduledNavigation
+                    // - Page.frameRequestedNavigation
+                    // - Page.frameStartedLoading
+                    // - page.frameClearedScheduledNavigation
+                    // - Page.frameStoppedLoading - BUT no Page.loadEventFired because there was no pageload
+                    if ($data['params']['frameId'] === $this->window_id) {
+                        $this->setPageReady(TRUE, $data['method']);
+                    }
                     break;
                 case 'Inspector.targetCrashed':
                     // Chrome has actually crashed (or been OOM killed or whatever). In this case it looks like:
