@@ -3,6 +3,11 @@ Changelog
 
 ## Unreleased
 
+## 2.7.0.7 (CUSTOM INGENERATOR RELEASE) (2022-10-31)
+
+* Bring in selected changes from upstream package to reintroduce CI & fix support for PHP 8.1. Note the change from
+  urlencode to rawurlencode when setting cookies through the driver (I don't think we actually do this).
+
 ## 2.7.0.6 (CUSTOM INGENERATOR RELEASE) (2022-02-23)
 
 * Don't fake the timestamps on click events - resolves issues with javascript frameworks ignoring events due to
