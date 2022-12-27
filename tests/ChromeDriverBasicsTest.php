@@ -59,6 +59,49 @@ HTML;
     }
 
     /**
+     * Validate we can populate text fields with a variety of characters.
+     *
+     * @dataProvider sampleTextProvider
+     */
+    public function testSetValueSampleText($input)
+    {
+        $xpath = '//input[./@name="input1"]';
+
+        $html = <<<'HTML'
+<html>
+<body>
+<form id="test">
+    <input name="input1" value="foo">
+    <input type="submit">
+</form>
+</body>
+</html>
+HTML;
+
+        $url = "data:text/html;charset=utf-8,${html}";
+        $this->driver->visit($url);
+        $this->driver->setValue($xpath, $input);
+        $this->assertSame($input, $this->driver->getValue($xpath));
+    }
+
+    /**
+     * Data provider for text cases.
+     *
+     * Should contain input strings which validate behaviour beyond simple latin text.
+     */
+    public function sampleTextProvider()
+    {
+        return [
+            ['Strawberries are nice'],
+            ['He pai nga rōpere'],
+            ['الفراولة لطيفة'],
+            ['Kloß sind schön'], // #105
+            ['いちごはいいです'],
+            ['sýr je pěkný'],
+        ];
+    }
+
+    /**
      * Validate getConsoleMessages() retrieves console messages.
      */
     public function testConsoleMessages()

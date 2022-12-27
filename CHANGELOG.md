@@ -5,6 +5,7 @@ Changelog
 
 * Throw DriverException if file to be uploaded is not found (#12, !128)
 * ConnectionException / StreamReadException handling improvements (!133, #68, #99, #119)
+* Test coverage for accented character value handling (#105)
 
 ## 2.8.0
 
