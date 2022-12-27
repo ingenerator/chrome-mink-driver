@@ -8,6 +8,10 @@ stages:
 
 .test_template: &test_template
   stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
   tags: [docker]
   retry: 2
   script:
@@ -23,9 +27,32 @@ stages:
       junit:
         - junit.xml
 
+Changelog:
+  stage: lint
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  allow_failure: true
+  script:
+    - git fetch
+    - FILES_CHANGED=$(git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA...HEAD)
+    - |+
+      for i in $FILES_CHANGED
+      do
+        if [[ "$i" == "CHANGELOG.md" ]]
+        then
+          exit 0
+        fi
+      done
+      echo "CHANGELOG.md not modified"
+      exit 1
+
 GrumPHP:
   image: composer
   stage: lint
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
   tags: [docker]
   script:
     - composer require --dev --prefer-dist --ansi --no-progress --sort-packages phpro/grumphp-shim ergebnis/composer-normalize enlightn/security-checker
