@@ -6,6 +6,18 @@ Changelog
 * Throw DriverException if file to be uploaded is not found (#12, !128)
 * ConnectionException / StreamReadException handling improvements (!133, #68, #99, #119)
 * Test coverage for accented character value handling (#105)
+* Fix for file upload handling (behat-chrome-extension#12, !128)
+* Test improvements (#124, !129)
+* Documentation improvements (!127)
+* Coding standards fixes (!115, !132, !136)
+
+## 2.8.1
+
+* Cookie encoding bugfix (#86)
+* Use upstream Mink test suite (#116)
+* Tests cover PHP versions 7.4 to 8.1 (#108)
+* Documentation improvements (!125)
+* Coding standards fixes (!115)
 
 ## 2.8.0
 
