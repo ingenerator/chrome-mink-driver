@@ -63,7 +63,7 @@ This will execute both [tests specific to this driver](https://gitlab.com/behat-
 
 ## Versioning & releases
 
-- Releases are distributed through Packagist at https://packagist.org/packages/dmore/behat-chrome-extension
+- Releases are distributed through Packagist at https://packagist.org/packages/dmore/chrome-mink-driver
 - This project aims to follow [Semantic Versioning](https://semver.org/).
 - Releases are communicated using release co-ordination issues in Gitlab.
 - New releases are created via [git tags being pushed to Gitlab](https://gitlab.com/behat-chrome/chrome-mink-driver/-/tags).
