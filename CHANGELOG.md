@@ -3,6 +3,8 @@ Changelog
 
 ## Unreleased
 
+* Use correct default values for domWaitTimeout and socketTimeout when unset (#133, !143)
+
 ## 2.9.0
 
 * Throw DriverException if file to be uploaded is not found (#12, !128)

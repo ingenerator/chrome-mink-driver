@@ -76,14 +76,14 @@ class ChromeDriver extends CoreDriver
      *
      * @var int
      */
-    public static $domWaitTimeoutDefault = 10;
+    public static $domWaitTimeoutDefault = 3000;
 
     /**
      * Default value for $socketTimeout.
      *
      * @var int
      */
-    public static $socketTimeoutDefault = 3000;
+    public static $socketTimeoutDefault = 10;
 
     /**
      * @var array
@@ -1533,7 +1533,7 @@ JS;
             if ($window['id'] == $window_id) {
                 $this->page = new ChromePage(
                     $window['webSocketDebuggerUrl'],
-                    $this->options['socketTimeout'] ?? self::$domWaitTimeoutDefault
+                    $this->options['socketTimeout'] ?? self::$socketTimeoutDefault
                 );
                 $this->page->connect();
                 $this->current_window = $window_id;
