@@ -3,6 +3,8 @@ Changelog
 
 ## Unreleased
 
+## 2.9.1
+
 * Use correct default values for domWaitTimeout and socketTimeout when unset (#133, !143)
 
 ## 2.9.0
