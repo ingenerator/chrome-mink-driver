@@ -88,7 +88,7 @@ class ChromeBrowser extends DevToolsConnection
             }
         }
 
-        $json = $this->http_client->get($this->http_uri . '/json/new');
+        $json = $this->http_client->put($this->http_uri . '/json/new');
         $response = json_decode($json, true);
         return $response['id'];
     }
