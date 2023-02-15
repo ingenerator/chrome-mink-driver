@@ -3,7 +3,6 @@ Changelog
 
 ## Unreleased
 
-<<<<<<< HEAD
 * Tests cover PHP versions 7.4 to 8.2 (!149)
 * Fix variable syntax deprecations (!149)
 * Fix support for headed mode with recent Chrome versions (!145, !146, !147)
