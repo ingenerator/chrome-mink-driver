@@ -16,6 +16,9 @@ class HttpClient
     protected function request($url, $verb)
     {
         $curl = curl_init();
+        if ($curl === false) {
+            throw new \RuntimeException('Error while initializing curl');
+        }
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         if ('GET' !== $verb) {
