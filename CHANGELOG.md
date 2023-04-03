@@ -3,6 +3,9 @@ Changelog
 
 ## Unreleased
 
+* Tests cover PHP versions 7.4 to 8.2 (!149)
+* Fix variable syntax deprecations (!149)
+
 ## 2.9.1
 
 * Use correct default values for domWaitTimeout and socketTimeout when unset (#133, !143)
