@@ -16,6 +16,7 @@ stages:
   retry: 2
   script:
     - bin/wait-for-chrome.sh
+    - curl -s http://localhost:9222/json/version
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
     - vendor/bin/phpunit --colors=always --log-junit junit.xml
