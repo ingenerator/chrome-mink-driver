@@ -3,6 +3,8 @@ Changelog
 
 ## Unreleased
 
+## 2.9.2
+
 * Tests cover PHP versions 7.4 to 8.2 (!149)
 * Fix variable syntax deprecations (!149)
 * Fix headed mode in Chrome v111+ using HTTP PUT request method when opening a new tab per https://chromedevtools.github.io/devtools-protocol/ (!145, !146, !147)
