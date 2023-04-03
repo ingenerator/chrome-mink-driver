@@ -3,6 +3,8 @@ Changelog
 
 ## Unreleased
 
+* Tests cover PHP versions 7.4 to 8.2 (#108)
+
 ## 2.9.1
 
 * Use correct default values for domWaitTimeout and socketTimeout when unset (#133, !143)
