@@ -952,7 +952,7 @@ JS;
     public function attachFile($xpath, $path)
     {
         if (!file_exists($path)) {
-            throw new DriverException("ChromeDriver was unable to find file '${path}' to attach it.");
+            throw new DriverException("ChromeDriver was unable to find file '{$path}' to attach it.");
         }
 
         $script = <<<JS

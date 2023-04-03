@@ -26,7 +26,7 @@ sample text
 </body>
 </html>
 HTML;
-        $url = "data:text/html;charset=utf-8,${html}";
+        $url = "data:text/html;charset=utf-8,{$html}";
         $this->driver->visit($url);
         $this->assertStringContainsString("sample text", $this->driver->getContent());
     }
@@ -53,7 +53,7 @@ HTML;
 </html>
 HTML;
 
-        $url = "data:text/html;charset=utf-8,${html}";
+        $url = "data:text/html;charset=utf-8,{$html}";
         $this->driver->visit($url);
         $this->driver->setValue('//input[./@name="input2"]', 'bar');
     }
@@ -78,7 +78,7 @@ HTML;
 </html>
 HTML;
 
-        $url = "data:text/html;charset=utf-8,${html}";
+        $url = "data:text/html;charset=utf-8,{$html}";
         $this->driver->visit($url);
         $this->driver->setValue($xpath, $input);
         $this->assertSame($input, $this->driver->getValue($xpath));
@@ -112,7 +112,7 @@ HTML;
 <body id="content">{$bodyContent}</body>
 </html>
 HTML;
-        $url = "data:text/html;charset=utf-8,${html}";
+        $url = "data:text/html;charset=utf-8,{$html}";
         $this->driver->visit($url);
         $this->driver->evaluateScript("console.log(document.getElementById('content').innerText)");
         $messages = $this->driver->getConsoleMessages();

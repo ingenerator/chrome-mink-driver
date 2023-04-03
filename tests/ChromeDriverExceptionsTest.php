@@ -35,7 +35,7 @@ class ChromeDriverExceptionsTest extends ChromeDriverTestBase
 </body>
 </html>
 HTML;
-        $url = "data:text/html;charset=utf-8,${html}";
+        $url = "data:text/html;charset=utf-8,{$html}";
         $this->driver->visit($url);
         $this->driver->attachFile('//input[./@name="attach"]', '/does-not-exist');
     }

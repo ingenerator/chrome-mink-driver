@@ -3,7 +3,8 @@ Changelog
 
 ## Unreleased
 
-* Tests cover PHP versions 7.4 to 8.2 (#108)
+* Tests cover PHP versions 7.4 to 8.2 (!149)
+* Fix variable syntax deprecations (!149)
 
 ## 2.9.1
 
