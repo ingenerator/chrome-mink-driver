@@ -31,6 +31,10 @@ Changelog
 * Documentation improvements (!125)
 * Coding standards fixes (!115)
 
+## Unreleased
+
+* Error handling for invalid form values (#140)
+
 ## 2.8.0
 
 * Improved support for Behat 1.8.x, fixes to CI (!93, #94, #104)
