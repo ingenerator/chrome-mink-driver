@@ -666,45 +666,78 @@ JS;
     }
 
     /**
+     * @param $xpath
+     * @return bool
+     * @throws ElementNotFoundException
+     */
+    protected function isTextTypeInput($xpath): bool
+    {
+        // phpcs:ignore Generic.Files.LineLength.TooLong
+        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
+        if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function setValue($xpath, $value)
     {
-        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
-        if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
-            $this->setNonTextTypeValue($xpath, $value);
+        if (!$this->isTextTypeInput($xpath)) {
+            $this->setTextTypeValue($xpath, $value);
         } else {
-            $current_value = $this->getValue($xpath);
-            if (!$this->runScriptOnXpathElement($xpath, 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }')) {
-              throw new DriverException('Element is not visible and can not be focused');
-            }
-            for ($i = 0; $i < strlen($current_value); $i++) {
-                $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
-                $this->page->send('Input.dispatchKeyEvent', $parameters);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-                $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 46, 'windowsVirtualKeyCode' => 46];
-                $this->page->send('Input.dispatchKeyEvent', $parameters);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-            }
-            for ($i = 0; $i < mb_strlen($value); $i++) {
-                $char = mb_substr($value, $i, 1);
-                if ($char == "\n") {
-                    $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
-                }
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
-                $this->keyDown($xpath, $char);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-                $this->keyUp($xpath, $char);
-            }
-            usleep(5000);
+            $this->setNonTextTypeValue($xpath, $value);
+        }
+    }
 
-            try {
-                $this->runScriptOnXpathElement($xpath, 'if (element === document.activeElement) {element.blur();}');
-            } catch (ElementNotFoundException $e) {
-                // Ignore, sometimes input elements can get hidden after they are modified.
-                // For example, editing a title inline and sending a newline character at the end
-                // which submits the inline edit and saves the changes.
+    /**
+     * @param $xpath
+     * @param $value
+     * @return void
+     * @throws DriverException
+     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\UnsupportedDriverActionException
+     */
+    protected function setTextTypeValue($xpath, $value)
+    {
+        if (!\is_string($value) && null !== $value) {
+            throw new DriverException('Textual and file form fields don\'t support array or boolean values');
+        }
+
+        $current_value = $this->getValue($xpath);
+        $script = 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }';
+        if (!$this->runScriptOnXpathElement($xpath, $script)) {
+            throw new DriverException('Element is not visible and can not be focused');
+        }
+        for ($i = 0; $i < strlen($current_value); $i++) {
+            $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
+            $this->page->send('Input.dispatchKeyEvent', $parameters);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+            $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 46, 'windowsVirtualKeyCode' => 46];
+            $this->page->send('Input.dispatchKeyEvent', $parameters);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+        }
+        for ($i = 0; $i < mb_strlen($value); $i++) {
+            $char = mb_substr($value, $i, 1);
+            if ($char == "\n") {
+                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
             }
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
+            $this->keyDown($xpath, $char);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+            $this->keyUp($xpath, $char);
+        }
+        usleep(5000);
+
+        try {
+            $this->runScriptOnXpathElement($xpath, 'if (element === document.activeElement) {element.blur();}');
+        } catch (ElementNotFoundException $e) {
+            // Ignore, sometimes input elements can get hidden after they are modified.
+            // For example, editing a title inline and sending a newline character at the end
+            // which submits the inline edit and saves the changes.
         }
     }
 
@@ -716,6 +749,15 @@ JS;
      */
     private function setNonTextTypeValue($xpath, $value)
     {
+        $fieldType = $this->getElementProperty($xpath, 'type');
+        if (!\is_string($value) && in_array($fieldType, ['file', 'radio'])) {
+            throw new DriverException('Only string values can be used for a ' . $fieldType . ' input.');
+        }
+
+        if (\is_bool($value) && in_array($fieldType, ['select', 'select-one'])) {
+            throw new DriverException('Boolean values cannot be used for a ' . $fieldType . ' element.');
+        }
+
         $json_value = is_numeric($value) ? $value : json_encode($value);
         $text_value = json_encode($value);
         $expression = <<<JS
