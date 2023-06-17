@@ -516,7 +516,7 @@ JS;
         $this->setVisibleSize($weight, $height);
         $screenshot = $this->page->send(
             'Page.captureScreenshot',
-            ['clip' =>  ['x' => 0, 'y' => 0, 'width' => $weight, 'height' => $height, 'scale' => 1]]
+            ['clip' => ['x' => 0, 'y' => 0, 'width' => $weight, 'height' => $height, 'scale' => 1]]
         );
         return base64_decode($screenshot['data']);
     }
@@ -582,7 +582,7 @@ JS;
     /**
      * Finds elements with specified XPath query.
      *
-     * @param  string $xpath
+     * @param string $xpath
      * @return string[] The XPath of the matched elements
      * @throws ElementNotFoundException
      */
@@ -634,7 +634,7 @@ JS;
     /**
      * Returns element's tag name by it's XPath query.
      *
-     * @param  string $xpath
+     * @param string $xpath
      * @return string
      * @throws ElementNotFoundException
      */
@@ -646,7 +646,7 @@ JS;
     /**
      * Returns element's text by it's XPath query.
      *
-     * @param  string $xpath
+     * @param string $xpath
      * @return string
      * @throws ElementNotFoundException
      */
@@ -724,47 +724,78 @@ JS;
     }
 
     /**
+     * @param $xpath
+     * @return bool
+     * @throws ElementNotFoundException
+     */
+    protected function isTextTypeInput($xpath): bool
+    {
+        // phpcs:ignore Generic.Files.LineLength.TooLong
+        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
+        if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function setValue($xpath, $value)
     {
-        // phpcs:ignore Generic.Files.LineLength
-        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
-        if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
-            $this->setNonTextTypeValue($xpath, $value);
+        if (!$this->isTextTypeInput($xpath)) {
+            $this->setTextTypeValue($xpath, $value);
         } else {
-            $current_value = $this->getValue($xpath);
-            $script = 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }';
-            if (!$this->runScriptOnXpathElement($xpath, $script)) {
-                throw new DriverException('Element is not visible and can not be focused');
-            }
-            for ($i = 0; $i < strlen($current_value); $i++) {
-                $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
-                $this->page->send('Input.dispatchKeyEvent', $parameters);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-                $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 46, 'windowsVirtualKeyCode' => 46];
-                $this->page->send('Input.dispatchKeyEvent', $parameters);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-            }
-            for ($i = 0; $i < mb_strlen($value); $i++) {
-                $char = mb_substr($value, $i, 1);
-                if ($char == "\n") {
-                    $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
-                }
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
-                $this->keyDown($xpath, $char);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-                $this->keyUp($xpath, $char);
-            }
-            usleep(5000);
+            $this->setNonTextTypeValue($xpath, $value);
+        }
+    }
 
-            try {
-                $this->triggerEvent($xpath, 'change');
-            } catch (ElementNotFoundException $e) {
-                // Ignore, sometimes input elements can get hidden after they are modified.
-                // For example, editing a title inline and sending a newline character at the end
-                // which submits the inline edit and saves the changes.
+    /**
+     * @param $xpath
+     * @param $value
+     * @return void
+     * @throws DriverException
+     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\UnsupportedDriverActionException
+     */
+    protected function setTextTypeValue($xpath, $value)
+    {
+        if (!\is_string($value) && null !== $value) {
+            throw new DriverException('Textual and file form fields don\'t support array or boolean values');
+        }
+
+        $current_value = $this->getValue($xpath);
+        $script = 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }';
+        if (!$this->runScriptOnXpathElement($xpath, $script)) {
+            throw new DriverException('Element is not visible and can not be focused');
+        }
+        for ($i = 0; $i < strlen($current_value); $i++) {
+            $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
+            $this->page->send('Input.dispatchKeyEvent', $parameters);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+            $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 46, 'windowsVirtualKeyCode' => 46];
+            $this->page->send('Input.dispatchKeyEvent', $parameters);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+        }
+        for ($i = 0; $i < mb_strlen($value); $i++) {
+            $char = mb_substr($value, $i, 1);
+            if ($char == "\n") {
+                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
             }
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
+            $this->keyDown($xpath, $char);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+            $this->keyUp($xpath, $char);
+        }
+        usleep(5000);
+
+        try {
+            $this->triggerEvent($xpath, 'change');
+        } catch (ElementNotFoundException $e) {
+            // Ignore, sometimes input elements can get hidden after they are modified.
+            // For example, editing a title inline and sending a newline character at the end
+            // which submits the inline edit and saves the changes.
         }
     }
 
@@ -776,6 +807,15 @@ JS;
      */
     private function setNonTextTypeValue($xpath, $value)
     {
+        $fieldType = $this->getElementProperty($xpath, 'type');
+        if (!\is_string($value) && in_array($fieldType, ['file', 'radio'])) {
+            throw new DriverException('Only string values can be used for a ' . $fieldType . ' input.');
+        }
+
+        if (\is_bool($value) && in_array($fieldType, ['select', 'select-one'])) {
+            throw new DriverException('Boolean values cannot be used for a ' . $fieldType . ' element.');
+        }
+
         $json_value = is_numeric($value) ? $value : json_encode($value);
         $text_value = json_encode($value);
         $expression = <<<JS
@@ -966,7 +1006,7 @@ JS;
 
         $node_id = null;
         $parameters = [
-          'pierce' => $this->document !== 'document',
+            'pierce' => $this->document !== 'document',
         ];
         foreach ($this->page->send('DOM.getFlattenedDocument', $parameters)['nodes'] as $element) {
             if (!empty($element['attributes'])) {
@@ -975,7 +1015,7 @@ JS;
                     if ($element['attributes'][$key] == 'name' && $element['attributes'][$key + 1] == $name) {
                         $this->page->send(
                             'DOM.setFileInputFiles',
-                            ['nodeId' => $element['nodeId'], 'files' => (array) $path]
+                            ['nodeId' => $element['nodeId'], 'files' => (array)$path]
                         );
                         return;
                     }
@@ -1182,7 +1222,7 @@ JS;
     /**
      * Sets the browser window size.
      *
-     * @param int $width  Set the window width, measured in pixels
+     * @param int $width Set the window width, measured in pixels
      * @param int $height Set the window height, measured in pixels
      */
     public function setVisibleSize($width, $height)
@@ -1190,18 +1230,18 @@ JS;
         $this->page->send(
             'Emulation.setDeviceMetricsOverride',
             [
-            'width'             => $width,
-            'height'            => $height,
-            'deviceScaleFactor' => 0,
-            'mobile'            => false,
-            'fitWindow'         => false,
+                'width' => $width,
+                'height' => $height,
+                'deviceScaleFactor' => 0,
+                'mobile' => false,
+                'fitWindow' => false,
             ]
         );
         $this->page->send(
             'Emulation.setVisibleSize',
             [
-            'width'  => $width,
-            'height' => $height,
+                'width' => $width,
+                'height' => $height,
             ]
         );
     }
@@ -1387,7 +1427,7 @@ JS;
     /**
      * @param  $xpath
      * @param  $script
-     * @param  null $type
+     * @param null $type
      * @return array
      * @throws ElementNotFoundException
      * @throws \Exception
@@ -1431,7 +1471,7 @@ JS;
     }
 
     /**
-     * @param  string $xpath
+     * @param string $xpath
      * @return array
      * @throws ElementNotFoundException
      */
@@ -1459,7 +1499,7 @@ JS;
         $result = $this->page->send(
             'DOMDebugger.getEventListeners',
             [
-            'objectId' => $result['objectId'],
+                'objectId' => $result['objectId'],
             ]
         );
 
@@ -1561,21 +1601,21 @@ JS;
     /**
      * For more information see https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-printToPDF
      *
-     * @param  string $filename
-     * @param  bool   $landscape
-     * @param  bool   $displayHeaderFooter
-     * @param  bool   $printBackground
-     * @param  int    $scale
-     * @param  float  $paperWidth
-     * @param  float  $paperHeight
-     * @param  float  $marginTop
-     * @param  float  $marginBottom
-     * @param  float  $marginLeft
-     * @param  float  $marginRight
-     * @param  string $pageRanges
-     * @param  bool   $ignoreInvalidPageRanges
-     * @param  string $headerTemplate
-     * @param  string $footerTemplate
+     * @param string $filename
+     * @param bool $landscape
+     * @param bool $displayHeaderFooter
+     * @param bool $printBackground
+     * @param int $scale
+     * @param float $paperWidth
+     * @param float $paperHeight
+     * @param float $marginTop
+     * @param float $marginBottom
+     * @param float $marginLeft
+     * @param float $marginRight
+     * @param string $pageRanges
+     * @param bool $ignoreInvalidPageRanges
+     * @param string $headerTemplate
+     * @param string $footerTemplate
      * @throws \Exception
      */
     public function printToPDF(
@@ -1628,8 +1668,8 @@ JS;
     /**
      * For more information see https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-captureScreenshot
      *
-     * @param  string $filename
-     * @param  array  $options
+     * @param string $filename
+     * @param array $options
      * @throws \Exception
      */
     public function captureScreenshot($filename, $options = [])
