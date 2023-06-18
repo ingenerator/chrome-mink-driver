@@ -5,6 +5,7 @@ variables:
 stages:
   - lint
   - test
+  - report
 
 workflow:
   rules:
@@ -17,12 +18,13 @@ workflow:
   stage: test
   tags: [docker]
   retry: 2
-  script:
+  before_script:
     - bin/wait-for-chrome.sh
     - curl -s http://localhost:9222/json/version
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
-    - vendor/bin/phpunit --colors=always --log-junit junit.xml
+  script:
+    - vendor/bin/phpunit --colors=always --log-junit junit.xml ${PHPUNIT_EXTRA_ARGS}
   needs: []
   artifacts:
     paths:
@@ -75,6 +77,24 @@ PHP 8.1:
 PHP 8.2:
   extends: .test_template
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.2
+
+# This job collects coverage also.
+Chrome + Coverage:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
+  stage: test
+  variables:
+    PHPUNIT_EXTRA_ARGS:  --coverage-cobertura phpunit-coverage.xml --coverage-text
+    XDEBUG_MODE: coverage
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: phpunit-coverage.xml
+      junit:
+        - junit.xml
+  coverage: '/^\s*Lines:\s*\d+.\d+\%/'
 
 Chromium:
   extends: .test_template

@@ -41,5 +41,8 @@
             "ergebnis/composer-normalize": true,
             "phpro/grumphp-shim": true
         }
+    },
+    "scripts": {
+        "coverage": "XDEBUG_MODE=coverage phpunit --log-junit phpunit-report.xml --coverage-cobertura phpunit-coverage.xml --coverage-text --colors=never"
     }
 }
