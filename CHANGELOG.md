@@ -2,6 +2,7 @@ Changelog
 =========
 
 ## Unreleased
+* Error handling for invalid form values (#140)
 
 ## 2.9.2
 
@@ -30,10 +31,6 @@ Changelog
 * Tests cover PHP versions 7.4 to 8.1 (#108)
 * Documentation improvements (!125)
 * Coding standards fixes (!115)
-
-## Unreleased
-
-* Error handling for invalid form values (#140)
 
 ## 2.8.0
 
