@@ -181,7 +181,8 @@ class ChromeDriver extends CoreDriver
      * implementations are free to handle it silently or to fail with an
      * exception.
      *
-     * @throws DriverException When the driver cannot be closed
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the driver cannot be closed
      */
     public function stop()
     {
@@ -237,9 +238,11 @@ class ChromeDriver extends CoreDriver
     /**
      * Visit specified URL.
      *
-     * @param string $url url of the page
+     * @param string $url
+     *   URL of the page
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function visit($url)
     {
@@ -255,7 +258,8 @@ class ChromeDriver extends CoreDriver
      *
      * @return string
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getCurrentUrl()
     {
@@ -266,7 +270,8 @@ class ChromeDriver extends CoreDriver
     /**
      * Reloads current page.
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function reload()
     {
@@ -277,7 +282,8 @@ class ChromeDriver extends CoreDriver
     /**
      * Moves browser forward 1 page.
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function forward()
     {
@@ -289,7 +295,8 @@ class ChromeDriver extends CoreDriver
     /**
      * Moves browser backward 1 page.
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function back()
     {
@@ -417,7 +424,8 @@ JS;
      * @param string $name
      * @param string $value
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function setCookie($name, $value = null)
     {
@@ -447,7 +455,8 @@ JS;
      *
      * @return string|null
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getCookie($name)
     {
@@ -466,7 +475,8 @@ JS;
      *
      * @return array
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getCookies()
     {
@@ -488,7 +498,8 @@ JS;
      *
      * @return string
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *  When the operation cannot be done
      */
     public function getContent()
     {
@@ -505,7 +516,8 @@ JS;
      * @return string screenshot of MIME type image/* depending
      *                on driver (e.g., image/png, image/jpeg)
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *  When the operation cannot be done
      */
     public function getScreenshot()
     {
@@ -526,7 +538,8 @@ JS;
      * @return string screenshot of MIME type image/* depending
      *                on driver (e.g., image/png, image/jpeg)
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getFullPageScreenshot()
     {
@@ -563,7 +576,8 @@ JS;
      *
      * @return string the name of the current window
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getWindowName()
     {
@@ -1367,7 +1381,7 @@ JS;
 
     /**
      * @param  $xpath
-     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function expectSelectOrRadio($xpath)
     {
@@ -1381,7 +1395,7 @@ JS;
 
     /**
      * @param  $xpath
-     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function expectCheckbox($xpath)
     {
@@ -1396,7 +1410,7 @@ JS;
     /**
      * @param  $xpath
      * @param  $event
-     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function triggerMouseEvent($xpath, $event)
     {
@@ -1413,7 +1427,7 @@ JS;
     /**
      * @param  $xpath
      * @param  $event
-     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function triggerEvent($xpath, $event)
     {
@@ -1432,7 +1446,7 @@ JS;
      * @param  $char
      * @param  $modifier
      * @param  $event
-     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function triggerKeyboardEvent($xpath, $char, $modifier, $event)
     {
@@ -1471,7 +1485,7 @@ JS;
      * @param  $script
      * @param null $type
      * @return array
-     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      * @throws \Exception
      */
     protected function runScriptOnXpathElement($xpath, $script, $type = null)
@@ -1515,7 +1529,7 @@ JS;
     /**
      * @param string $xpath
      * @return array
-     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     public function getEventListenersForXpath($xpath)
     {
@@ -1600,7 +1614,7 @@ JS;
 
     /**
      * @param  $window_id
-     * @throws DriverException
+     * @throws \Behat\Mink\Exception\DriverException
      */
     protected function connectToWindow($window_id)
     {
