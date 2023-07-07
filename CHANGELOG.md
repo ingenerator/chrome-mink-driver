@@ -4,6 +4,7 @@ Changelog
 ## Unreleased
 * Error handling for invalid form values (#140)
 * Introduce code coverage in CI (!154, !160)
+* Add `make` commands for development tasks (!159)
 
 ## 2.9.2
 

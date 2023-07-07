@@ -54,6 +54,14 @@ Changelog:
       echo -e "⚠️\e[93m (or an explanatory comment in MR if it's not CHANGELOG-worthy)"
       exit 1
 
+Makefile:
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
+  stage: lint
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  script:
+    - make --dry-run test_make
+
 GrumPHP:
   image: composer
   stage: lint

@@ -45,21 +45,30 @@ Contributions are welcome! Use the [issue queue and merge requests to propose ch
 
 ## Tests
 
-To run tests locally:
+The project has test coverage, which you can execute using the commands below.
 
-```bash
-cd chrome-mink-driver
-docker run --rm -it -v $(pwd):/code -e DOCROOT=/code/vendor/mink/driver-testsuite/web-fixtures registry.gitlab.com/behat-chrome/docker-chrome-headless bash
+Test execution requires a webserver configured to serve fixtures from [minkphp/driver-testsuite](https://github.com/minkphp/driver-testsuite/), which is provided by a docker image from the related [behat-chrome/docker-chrome-headless](https://gitlab.com/behat-chrome/docker-chrome-headless/) project.  Tests executed are both [tests specific to this driver](https://gitlab.com/behat-chrome/chrome-mink-driver/-/tree/main/tests) and the more comprehensive test suite from [mink/driver-testsuite](https://github.com/minkphp/driver-testsuite/), which is the common testsuite to ensure consistency across Mink driver implementations.
+
+### Using `make`
+
+| command | purpose |
+|--|--|
+| `make install` | Install dependencies with `composer` |
+| `make test` | Run tests with `phpunit` |
+| `make phpcbf` | Tidy code using `phpcbf` |
+| `make phpcs` | Check coding standards with `phpcs` |
+
+### Without `make`
+
+To perform these tasks without `make`, you can execute the same commands as above in a container. To run the tests using `phpunit`:
+```text
+docker run --rm -it -v .:/code -e DOCROOT=/code/vendor/mink/driver-testsuite/web-fixtures registry.gitlab.com/behat-chrome/docker-chrome-headless bash
 ```
-
-Then in the shell:
-
-```bash
+then, in the container shell:
+```text
 composer install
 vendor/bin/phpunit
 ```
-
-This will execute both [tests specific to this driver](https://gitlab.com/behat-chrome/chrome-mink-driver/-/tree/main/tests) and the more comprehensive test suite from [mink/driver-testsuite](https://github.com/minkphp/driver-testsuite/), which is the common testsuite to ensure consistency across Mink driver implementations.
 
 ## Versioning & releases
 
