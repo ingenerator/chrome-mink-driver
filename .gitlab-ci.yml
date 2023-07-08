@@ -24,7 +24,7 @@ workflow:
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
   script:
-    - vendor/bin/phpunit --colors=always --log-junit junit.xml ${PHPUNIT_EXTRA_ARGS}
+    - vendor/bin/phpunit --colors=always --log-junit junit.xml
   needs: []
   artifacts:
     paths:
@@ -84,8 +84,9 @@ Chrome + Coverage:
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless
   stage: test
   variables:
-    PHPUNIT_EXTRA_ARGS:  --coverage-cobertura phpunit-coverage.xml --coverage-text
     XDEBUG_MODE: coverage
+  script:
+    - vendor/bin/phpunit --colors=never --log-junit junit.xml --coverage-cobertura phpunit-coverage.xml --coverage-text
   artifacts:
     when: always
     reports:
