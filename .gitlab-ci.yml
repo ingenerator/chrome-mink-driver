@@ -86,25 +86,6 @@ PHP 8.2:
   extends: .test_template
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.2
 
-# This job collects coverage also.
-Chrome + Coverage:
-  extends: .test_template
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-  stage: test
-  variables:
-    XDEBUG_MODE: coverage
-  script:
-    - vendor/bin/phpunit --colors=never --log-junit junit.xml --coverage-cobertura phpunit-coverage.xml --coverage-text
-  artifacts:
-    when: always
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: phpunit-coverage.xml
-      junit:
-        - junit.xml
-  coverage: '/^\s*Lines:\s*\d+.\d+\%/'
-
 Chromium:
   extends: .test_template
   variables:
@@ -149,3 +130,20 @@ Headed chromium:
     AUTOSTART_XVFB: "true"
     CHROME_BUILD: chromium
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless
+
+# This job collects coverage also.
+Report PHPUnit coverage:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
+  stage: report
+  variables:
+    XDEBUG_MODE: coverage
+  script:
+    - vendor/bin/phpunit --colors=never --log-junit junit.xml --coverage-cobertura phpunit-coverage.xml --coverage-text
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: phpunit-coverage.xml
+  coverage: '/^\s*Lines:\s*\d+.\d+\%/'
