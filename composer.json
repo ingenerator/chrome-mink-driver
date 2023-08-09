@@ -33,9 +33,10 @@
         "dms/phpunit-arraysubset-asserts": "^0.4.0"
     },
     "require": {
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
         "ext-curl": "*",
         "ext-json": "*",
-        "textalk/websocket": "^1.5.0",
-        "behat/mink": "^1.7"
+        "phrity/websocket": "^1.7",
+        "behat/mink": "^1.9"
     }
 }

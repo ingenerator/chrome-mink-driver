@@ -3,6 +3,15 @@ Changelog
 
 ## Unreleased
 
+## 2.7.0.8 (CUSTOM INGENERATOR RELEASE) (2023-08-09)
+
+* Bring in selected changes from upstream package to fix various minor bugs, new test requirements from the core mink
+  driver testsuite, and PHP 8.2 support - see https://github.com/ingenerator/chrome-mink-driver/pull/16
+
+* Advertise supported php versions and run tests on php8.2
+
+* Switch from textalk/websocket to the more-maintained fork phrity/websocket. 
+
 ## 2.7.0.7 (CUSTOM INGENERATOR RELEASE) (2022-10-31)
 
 * Bring in selected changes from upstream package to reintroduce CI & fix support for PHP 8.1. Note the change from
