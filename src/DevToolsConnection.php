@@ -187,7 +187,7 @@ class ConnLoggingWebsocketClient extends WebsocketClient
 {
     private $conn_count = 0;
 
-    protected function connect(): void
+    public function connect(): void
     {
         $this->conn_count++;
         if ($this->conn_count > 1) {
