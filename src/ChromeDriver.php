@@ -4,6 +4,7 @@ namespace DMore\ChromeDriver;
 use Behat\Mink\Driver\CoreDriver;
 use Behat\Mink\Exception\DriverException;
 use Behat\Mink\Exception\ElementNotFoundException;
+use Behat\Mink\Exception\UnsupportedDriverActionException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use WebSocket\ConnectionException;
 
@@ -92,7 +93,6 @@ class ChromeDriver extends CoreDriver
         }
 
         if (isset($this->options['validateCertificate']) && $this->options['validateCertificate'] === false) {
-            $this->page->send('Security.enable');
             $this->page->send('Security.setIgnoreCertificateErrors', ['ignore' => true]);
         }
     }
@@ -144,7 +144,6 @@ class ChromeDriver extends CoreDriver
             $this->browser->close();
         } catch (ConnectionException $exception) {
         } catch (DriverException $exception) {
-        } catch (StreamReadException $exception) {
         }
 
         $this->is_started = false;
@@ -174,13 +173,65 @@ class ChromeDriver extends CoreDriver
      */
     public function reset()
     {
-        $this->ensureStarted();
-        $this->document = 'document';
-        $this->deleteAllCookies();
+        // Sometimes Chrome gets into a bonkers state where the page seems to hang and even Page.navigate doesn't return
+        // a response until the next time you call Page.navigate, at which time we get a net::ERR_ABORTED for the
+        // previous for no apparent reason. That will then continue to happen for *every* Page.navigate command for the
+        // rest of the run - even though the socket is quite happy and still accepts and responds to the
+        // Network.clearBrowserCookies.
+        try {
+            $this->ensureStarted();
+            $this->document = 'document';
+            $this->deleteAllCookies();
+            $this->connectToWindow($this->main_window);
+
+            $this->forcePageResetOrRestartDriver();
+
+            if ($this->request_headers !== []) {
+                $this->request_headers = [];
+                $this->sendRequestHeaders();
+            }
+        } catch (DriverException $e) {
+            \fwrite(
+                STDOUT,
+                "ERROR: Could not reset - ".$e->getMessage()."\n".$e->getTraceAsString()
+            );
+            ChromeDriverDebugLogger::instance()->logDriverException($e, 'Failed to reset');
+            // What happens if we just allow the scenario to continue here????
+        }
+    }
+
+    private function forcePageResetOrRestartDriver()
+    {
+        try {
+            $this->page->reset();
+            return;
+        } catch (DriverException $e) {
+            \fwrite(
+                STDOUT,
+                sprintf(
+                    "ERROR: Failed to reset page [%s] %s - stopping & restarting",
+                    \get_class($e),
+                    $e->getMessage()
+                )
+            );
+            ChromeDriverDebugLogger::instance()->logDriverException($e, 'When resetting to about:blank');
+        }
+
+        // If we got here then visiting about:blank failed
+        try {
+            $this->page->close();
+            $this->http_client->get($this->api_url.'/json/close/'.$this->current_window);
+            $this->browser->close();
+        } catch (ConnectionException $e) {
+            ChromeDriverDebugLogger::instance()->logAnyException('When closing page', $e);
+        } catch (DriverException $e) {
+            ChromeDriverDebugLogger::instance()->logAnyException('When closing page', $e);
+        }
+        $this->is_started = FALSE;
+
+        // And now restart
+        $this->start();
         $this->connectToWindow($this->main_window);
-        $this->page->reset();
-        $this->request_headers = [];
-        $this->sendRequestHeaders();
     }
 
     /**
@@ -195,8 +246,7 @@ class ChromeDriver extends CoreDriver
         $this->ensureStarted();
         $this->page->visit($url);
         $this->document = 'document';
-        $this->page->waitForLoad();
-        $this->waitForDom();
+        $this->page->waitUntilFullyLoaded();
     }
 
     /**
@@ -208,8 +258,23 @@ class ChromeDriver extends CoreDriver
      */
     public function getCurrentUrl()
     {
-        $this->waitForDom();
-        return $this->evaluateScript('window.location.href');
+        // Don't use Runtime.evaluate or waitForLoad here, it makes the method vastly more brittle and means we can't
+        // get the URL even if the target has crashed. And I think is why then timing out to be able to Runtime.evaluate
+        // makes the build run for ever because the pre-scenario hooks get a 90 second timeout on checking the current
+        // URL.
+        // Our other option here would be to just capture the URL on Page.frameNavigated and
+        // Page.frameNavigatedWithinDocument so that we can just return the most-recently-known
+        // value to the caller without any waiting or anything.
+        $windows = json_decode($this->http_client->get($this->api_url.'/json/list'), TRUE);
+
+        foreach ($windows as $window) {
+            if ($window['id'] == $this->current_window) {
+                return $window['url'];
+            }
+        }
+        throw new DriverException(
+            'Could not identify current URL, our window '.$this->current_window.' is not listed in chrome /json/list'
+        );
     }
 
     /**
@@ -231,8 +296,8 @@ class ChromeDriver extends CoreDriver
     public function forward()
     {
         $this->runScript('window.history.forward()');
-        $this->waitForDom();
-        $this->page->waitForLoad();
+        $this->page->expectNewPageload();
+        $this->page->waitUntilFullyLoaded();
     }
 
     /**
@@ -243,8 +308,8 @@ class ChromeDriver extends CoreDriver
     public function back()
     {
         $this->runScript('window.history.back()');
-        $this->waitForDom();
-        $this->page->waitForLoad();
+        $this->page->expectNewPageload();
+        $this->page->waitUntilFullyLoaded();
     }
 
     /**
@@ -357,6 +422,7 @@ JS;
      */
     public function getResponseHeaders()
     {
+        throw new UnsupportedDriverActionException('%s does not support getting response headers', $this);
         return $this->page->getResponse()['headers'];
     }
 
@@ -429,6 +495,7 @@ JS;
      */
     public function getStatusCode()
     {
+        throw new UnsupportedDriverActionException('%s does not support getting response headers', $this);
         return $this->page->getResponse()['status'];
     }
 
@@ -530,7 +597,7 @@ JS;
      */
     protected function findElementXpaths($xpath)
     {
-        $this->waitForDom();
+        $this->page->waitUntilFullyLoaded();
         $expression = $this->getXpathExpression($xpath);
         $expression .= <<<JS
     function getPathTo(element) {
@@ -916,8 +983,7 @@ JS;
                 ];
                 $this->page->send('Input.dispatchMouseEvent', $parameters);
             }
-            usleep(50000);
-            $this->waitForDom();
+            $this->page->waitForPossibleNavigation();
         }
     }
 
@@ -1507,7 +1573,11 @@ JS;
 
         foreach ($windows as $window) {
             if ($window['id'] == $window_id) {
-                $this->page = new ChromePage($window['webSocketDebuggerUrl'], isset($this->options['socketTimeout']) ? $this->options['socketTimeout'] : 10);
+                $this->page = new ChromePage(
+                    $window_id,
+                    $window['webSocketDebuggerUrl'],
+                    isset($this->options['socketTimeout']) ? $this->options['socketTimeout'] : 10
+                );
                 $this->page->connect();
                 $this->current_window = $window_id;
                 $this->document = 'document';
@@ -1521,12 +1591,6 @@ JS;
     protected function sendRequestHeaders()
     {
         $this->page->send('Network.setExtraHTTPHeaders', ['headers' => $this->request_headers ?: new \stdClass()]);
-    }
-
-    protected function waitForDom()
-    {
-        $this->wait($this->domWaitTimeout, 'document.readyState == "complete"');
-        $this->page->waitForLoad();
     }
 
     /**
@@ -1597,5 +1661,16 @@ JS;
         }
 
         file_put_contents($filename, $imageData);
+    }
+
+    public function clearLocalStorageForOrigin(string $origin): void
+    {
+        $this->page->send(
+            'Storage.clearDataForOrigin',
+            [
+                'origin' => $origin,
+                'storageTypes' => 'local_storage',
+            ]
+        );
     }
 }
