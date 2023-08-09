@@ -50,12 +50,15 @@ class ChromeDriver extends CoreDriver
      * @param $base_url
      * @param array $options
      */
-    public function __construct($api_url = 'http://localhost:9222', HttpClient $http_client = null, $base_url = null, $options = [])
-    {
+    public function __construct(
+        $api_url = 'http://localhost:9222',
+        HttpClient $http_client = null,
+        $base_url = null,
+        $options = []
+    ) {
         if (empty($base_url)) {
             throw new \InvalidArgumentException("Base URL can not be empty.");
         }
-
         if ($http_client == null) {
             $http_client = new HttpClient();
         }
@@ -130,8 +133,6 @@ class ChromeDriver extends CoreDriver
      */
     public function stop()
     {
-        // SEE ALSO implementation of forcePageResetOrRestartDriver
-        $this->ensureStarted();
         try {
             $this->reset();
             foreach ($this->getWindowNames() as $key => $window_id) {
@@ -449,7 +450,7 @@ JS;
             }
         } else {
             $url = $this->base_url . '/';
-            $value = urlencode($value);
+            $value = rawurlencode($value);
             $this->page->send('Network.setCookie', ['url' => $url, 'name' => $name, 'value' => $value]);
         }
     }
@@ -469,7 +470,7 @@ JS;
 
         foreach ($result['cookies'] as $cookie) {
             if ($cookie['name'] == $name) {
-                return urldecode($cookie['value']);
+                return rawurldecode($cookie['value']);
             }
         }
         return null;
@@ -732,45 +733,78 @@ JS;
     }
 
     /**
+     * @param $xpath
+     * @return bool
+     * @throws ElementNotFoundException
+     */
+    protected function isTextTypeInput($xpath): bool
+    {
+        // phpcs:ignore Generic.Files.LineLength.TooLong
+        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
+        if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function setValue($xpath, $value)
     {
-        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
-        if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
-            $this->setNonTextTypeValue($xpath, $value);
+        if (!$this->isTextTypeInput($xpath)) {
+            $this->setTextTypeValue($xpath, $value);
         } else {
-            $current_value = $this->getValue($xpath);
-            if (!$this->runScriptOnXpathElement($xpath, 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }')) {
-              throw new DriverException('Element is not visible and can not be focused');
-            }
-            for ($i = 0; $i < strlen($current_value); $i++) {
-                $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
-                $this->page->send('Input.dispatchKeyEvent', $parameters);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-                $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 46, 'windowsVirtualKeyCode' => 46];
-                $this->page->send('Input.dispatchKeyEvent', $parameters);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-            }
-            for ($i = 0; $i < mb_strlen($value); $i++) {
-                $char = mb_substr($value, $i, 1);
-                if ($char == "\n") {
-                    $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
-                }
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
-                $this->keyDown($xpath, $char);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-                $this->keyUp($xpath, $char);
-            }
-            usleep(5000);
+            $this->setNonTextTypeValue($xpath, $value);
+        }
+    }
 
-            try {
-                $this->runScriptOnXpathElement($xpath, 'if (element === document.activeElement) {element.blur();}');
-            } catch (ElementNotFoundException $e) {
-                // Ignore, sometimes input elements can get hidden after they are modified.
-                // For example, editing a title inline and sending a newline character at the end
-                // which submits the inline edit and saves the changes.
+    /**
+     * @param $xpath
+     * @param $value
+     * @return void
+     * @throws DriverException
+     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\UnsupportedDriverActionException
+     */
+    protected function setTextTypeValue($xpath, $value)
+    {
+        if (\is_array($value) || \is_bool($value)) {
+            throw new DriverException('Textual and file form fields don\'t support array or boolean values');
+        }
+
+        $current_value = $this->getValue($xpath);
+        $script = 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }';
+        if (!$this->runScriptOnXpathElement($xpath, $script)) {
+            throw new DriverException('Element is not visible and can not be focused');
+        }
+        for ($i = 0; $i < strlen($current_value); $i++) {
+            $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
+            $this->page->send('Input.dispatchKeyEvent', $parameters);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+            $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 46, 'windowsVirtualKeyCode' => 46];
+            $this->page->send('Input.dispatchKeyEvent', $parameters);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+        }
+        for ($i = 0; $i < mb_strlen($value); $i++) {
+            $char = mb_substr($value, $i, 1);
+            if ($char == "\n") {
+                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
             }
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
+            $this->keyDown($xpath, $char);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+            $this->keyUp($xpath, $char);
+        }
+        usleep(5000);
+
+        try {
+            $this->runScriptOnXpathElement($xpath, 'if (element === document.activeElement) {element.blur();}');
+        } catch (ElementNotFoundException $e) {
+            // Ignore, sometimes input elements can get hidden after they are modified.
+            // For example, editing a title inline and sending a newline character at the end
+            // which submits the inline edit and saves the changes.
         }
     }
 
@@ -782,7 +816,16 @@ JS;
      */
     private function setNonTextTypeValue($xpath, $value)
     {
-        $json_value = ctype_digit($value) ? $value : json_encode($value);
+        $fieldType = $this->getElementProperty($xpath, 'type');
+        if (!\is_string($value) && in_array($fieldType, ['file', 'radio'])) {
+            throw new DriverException('Only string values can be used for a ' . $fieldType . ' input.');
+        }
+
+        if (\is_bool($value) && in_array($fieldType, ['select', 'select-one'])) {
+            throw new DriverException('Boolean values cannot be used for a ' . $fieldType . ' element.');
+        }
+
+        $json_value = is_numeric($value) ? $value : json_encode($value);
         $text_value = json_encode($value);
         $expression = <<<JS
     var expected_value = $json_value;
@@ -946,9 +989,16 @@ JS;
 
     /**
      * {@inheritdoc}
+     *
+     * @throws DriverException
+     * @throws ElementNotFoundException
      */
     public function attachFile($xpath, $path)
     {
+        if (!file_exists($path)) {
+            throw new DriverException("ChromeDriver was unable to find file '{$path}' to attach it.");
+        }
+
         $script = <<<JS
     if (element == undefined || element.tagName != 'INPUT' || element.type != 'file') {
         throw new Error("Element not found");
@@ -1255,17 +1305,17 @@ JS;
      *
      * @return array
      */
-    public function getConsoleMessages() {
+    public function getConsoleMessages()
+    {
         return $this->page->getConsoleMessages();
     }
 
     /**
-     * Clear the sotred console messages.
-     *
-     * @return array
+     * Clear the console messages.
      */
-    public function clearConsoleMessages() {
-        return $this->page->getConsoleMessages();
+    public function clearConsoleMessages()
+    {
+        $this->page->clearConsoleMessages();
     }
 
     protected function deleteAllCookies()

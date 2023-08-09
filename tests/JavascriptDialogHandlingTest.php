@@ -6,6 +6,7 @@ namespace DMore\ChromeDriverTests;
 use Behat\Mink\Tests\Driver\TestCase;
 use DMore\ChromeDriver\ChromeDriver;
 use DMore\ChromeDriver\UnexpectedJavascriptDialogException;
+use DMS\PHPUnitExtensions\ArraySubset\Assert as DMSAssert;
 
 class JavascriptDialogHandlingTest extends TestCase
 {
@@ -67,7 +68,7 @@ class JavascriptDialogHandlingTest extends TestCase
             );
             $this->fail('Did not get '.UnexpectedJavascriptDialogException::class);
         } catch (UnexpectedJavascriptDialogException $e) {
-            $this->assertContains('must return an `accept` property', $e->getMessage());
+            $this->assertStringContainsString('must return an `accept` property', $e->getMessage());
             $this->assertSame(FALSE, $session->evaluateScript('window._dialog_result'));
         }
     }
@@ -106,7 +107,7 @@ class JavascriptDialogHandlingTest extends TestCase
         $this->assertTrue($session->wait(15, 'window._dialog_called'), 'Wait should succeed');
         $this->assertSame($expect_result, $session->evaluateScript('window._dialog_result'));
         $this->assertCount(1, $handler_calls, 'Handler should have been called exactly once');
-        $this->assertArraySubset($expect_called, $handler_calls[0], 'Should have called handler with expected args');
+        DMSAssert::assertArraySubset($expect_called, $handler_calls[0], 'Should have called handler with expected args');
     }
 
     protected function getChromeDriver(): ChromeDriver
