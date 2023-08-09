@@ -16,7 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         php_version:
-          - '7.2'
+          - '8.0'
+          - '8.1'
         dependencies:
           - 'default'
 
@@ -26,7 +27,7 @@ jobs:
           /usr/bin/docker run -d -it --rm --name chrome-headless -p 9222:9222 \
           -v $(pwd):/code \
           -e DOCROOT=/code/vendor/mink/driver-testsuite/web-fixtures \
-          registry.gitlab.com/dmore/docker-chrome-headless:7.2 bash
+          registry.gitlab.com/behat-chrome/docker-chrome-headless:${{ matrix.php_version }} bash
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
