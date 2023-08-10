@@ -795,9 +795,23 @@ JS;
         usleep(5000);
 
         try {
-            $this->triggerEvent($xpath, 'change');
+            // Remove the focus from the element if the field still has focus, in order to trigger the change event
+            // if the element supports it.
+            //
+            // By doing this instead of simply triggering the change event for the given xpath we ensure that:
+            // a) the change event will not be triggered twice for the same element if it has lost focus in the meantime
+            //    (e.g. if the original input element has custom javascript behaviour that focuses another control
+            //    during data entry, such as an autocomplete / typeahead).
+            // b) the change event will not be triggered for contenteditable elements (which do not natively fire
+            //    `change`).
+            // c) the change event will bubble up the document the same as native change events.
+            //
+            // If the element has lost focus already then there is nothing to do as this will already have caused
+            // the triggering of the change event for that element and/or we assume that clientside code that focused
+            // an alternate element has taken responsibility for triggering events on input / change.
+            $this->runScriptOnXpathElement($xpath, 'if (element === document.activeElement) {element.blur();}');
         } catch (ElementNotFoundException $e) {
-            // Ignore, sometimes input elements can get hidden after they are modified.
+            // Ignore, sometimes input elements can get removed from a document after they are modified.
             // For example, editing a title inline and sending a newline character at the end
             // which submits the inline edit and saves the changes.
         }
