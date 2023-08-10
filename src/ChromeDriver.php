@@ -780,7 +780,9 @@ JS;
         if (!$this->runScriptOnXpathElement($xpath, $script)) {
             throw new DriverException('Element is not visible and can not be focused');
         }
-        for ($i = 0; $i < strlen($current_value); $i++) {
+
+        // Remove the current value if present (nb an empty contenteditable returns `null` as current value)
+        for ($i = 0; $i < strlen($current_value ?? ''); $i++) {
             $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
             $this->page->send('Input.dispatchKeyEvent', $parameters);
             $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
@@ -788,6 +790,8 @@ JS;
             $this->page->send('Input.dispatchKeyEvent', $parameters);
             $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
         }
+
+        // Then add the new value
         for ($i = 0; $i < mb_strlen($value); $i++) {
             $char = mb_substr($value, $i, 1);
             // For 'normal' chars, the `text` devtools property & the `key` event property are the desired character
