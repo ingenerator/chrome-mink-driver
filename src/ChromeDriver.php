@@ -730,8 +730,18 @@ JS;
      */
     protected function isTextTypeInput($xpath): bool
     {
-        // phpcs:ignore Generic.Files.LineLength.TooLong
-        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
+        // See ChromeDriverInputEventsTest for list of all W3C input types and rationale for which we count as `text`
+        // Note that any unknown type (e.g. `<input type=made_up>`) is already coalesced by the browser so Chrome will
+        // return `element.type === 'text'` for these elements.
+        $is_text_field = <<<'JS'
+            (
+                element.tagName == 'INPUT'
+                && ['text', 'search', 'tel', 'url', 'email', 'password', 'number'].includes(element.type)
+            )
+            || (element.tagName == 'TEXTAREA')
+            || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')
+            JS;
+
         if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
             return true;
         } else {
@@ -835,7 +845,6 @@ JS;
         }
 
         $json_value = is_numeric($value) ? $value : json_encode($value);
-        $text_value = json_encode($value);
         $expression = <<<JS
     var expected_value = $json_value;
     var result = 0;
@@ -876,9 +885,6 @@ JS;
             }
         }
     } else if (element.tagName == 'INPUT' && element.type == 'file') {
-    } else if (element.tagName == 'INPUT' && 
-        (element.type == 'password' || element.type == 'tel' || element.type == 'email')) {
-        element.value = $text_value;
     } else {
         element.value = expected_value
     }
