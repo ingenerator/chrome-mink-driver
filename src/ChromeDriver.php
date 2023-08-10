@@ -780,11 +780,17 @@ JS;
         }
         for ($i = 0; $i < mb_strlen($value); $i++) {
             $char = mb_substr($value, $i, 1);
+            // For 'normal' chars, the `text` devtools property & the `key` event property are the desired character
+            $text = $key = $char;
             if ($char === "\n") {
-                $char = chr(13);
+                // For newlines, the `text` and `key` have special values. This is also the case for other special
+                // (control etc) keys, but newline is the only one that can also be added as part of the string value
+                // of a text field (e.g. a textarea or contenteditable).
+                $text = chr(13);
+                $key = 'Enter';
             }
-            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
-            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $text, 'key' => $key]);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp', 'key' => $key]);
         }
         usleep(5000);
 
