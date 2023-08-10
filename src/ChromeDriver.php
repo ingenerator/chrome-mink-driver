@@ -780,8 +780,8 @@ JS;
         }
         for ($i = 0; $i < mb_strlen($value); $i++) {
             $char = mb_substr($value, $i, 1);
-            if ($char == "\n") {
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
+            if ($char === "\n") {
+                $char = chr(13);
             }
             $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
             $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
