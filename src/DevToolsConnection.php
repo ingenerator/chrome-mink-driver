@@ -42,17 +42,21 @@ abstract class DevToolsConnection
      * Check DevTools connection.
      *
      * @return bool
+     * @deprecated since 2.8.0 this method has always returned false and is not considered useful
      */
     public function canDevToolsConnectionBeEstablished()
     {
-        $url = $this->getUrl() . "/json/version";
-        $c = curl_init($url);
-        curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
-        $s = curl_exec($c);
-        curl_close($c);
-
-        return $s !== false && strpos($s, 'Chrome') !== false;
+        // Since 2.8.0 this has always returned false, as the `url` injected into `ChromePage` is the *websocket url*
+        // and not the base url of the JSON API - so adding `/json/version` to the URL has always resulted in a 404.
+        //
+        // The method was only added as an attempt to detect whether Chrome itself was healthy if the driver received
+        // a timeout when reading from the websocket, in order to decide whether to retry the read. However, timeouts
+        // are much more commonly just because Chrome has nothing to report (e.g. a pageload or client-side event is
+        // taking longer than the socket read timeout to complete), or a tab has crashed. In both these cases, we have
+        // observed that the JSON API of the main browser process is always available, so this method of check never
+        // identifies new genuine failure cases but historically was producing false positive reports that the browser
+        // had crashed.
+        return false;
     }
 
     /**
