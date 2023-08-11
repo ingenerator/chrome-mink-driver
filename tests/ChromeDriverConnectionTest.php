@@ -38,11 +38,12 @@ class ChromeDriverConnectionTest extends ChromeDriverTestBase
             'socketTimeout' => 1,
         ];
         $this->driver = new ChromeDriver('http://localhost:9222', null, 'about:blank', $options);
-        $this->expectException(TimeoutException::class);
         $script = "confirm('Is the browser blocked? (yes, it is)');";
         $this->driver->visit('about:blank');
         $this->driver->evaluateScript($script);
+
         // Content read is necessary to trigger timeout.
+        $this->expectException(TimeoutException::class);
         $this->driver->getContent();
     }
 
