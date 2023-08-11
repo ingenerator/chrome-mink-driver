@@ -126,7 +126,6 @@ abstract class DevToolsConnection
      * @return mixed|null
      * @throws ConnectionException
      * @throws DriverException
-     * @throws StreamReadException
      */
     protected function waitFor(callable $is_ready)
     {
@@ -135,12 +134,11 @@ abstract class DevToolsConnection
             try {
                 $response = $this->client->receive();
             } catch (ConnectionException $exception) {
-                $message = $exception->getMessage();
-                if ($json = mb_substr($message, strpos($message, '{'))) {
-                    if ($state = json_decode($json, true)) {
-                        throw new StreamReadException($message, 101, $state, $exception);
-                    }
-                }
+                // NB - this may throw a TimeoutException if the socket read times out simply because Chrome has nothing
+                // to report within the specified socket_timeout - e.g. initial server-side document request takes
+                // longer than the timeout, or Chrome is stalled on a window.alert|confirm|prompt or other client-side
+                // operation. This catch is retained temporarily as this will be the correct place to handle a Timeout
+                // in future.
                 throw $exception;
             }
 
