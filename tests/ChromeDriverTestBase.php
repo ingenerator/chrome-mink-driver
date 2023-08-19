@@ -28,6 +28,19 @@ class ChromeDriverTestBase extends TestCase
     }
 
     /**
+     * {inheritDoc}
+     */
+    protected function tearDown(): void
+    {
+        if ($this->driver->isStarted()) {
+            $this->driver->stop();
+        }
+        // Release reference to driver to allow garbage collection
+        $this->driver = null;
+        parent::tearDown();
+    }
+
+    /**
      * @return ChromeDriver
      */
     private function getDriver(): ChromeDriver
