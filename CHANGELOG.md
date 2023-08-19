@@ -8,6 +8,7 @@ Changelog
 * Fix event dispatch and input type handling for all HTML input types (!166)
 * Remove broken StreamReadException & canDevToolsConnectionBeEstablished timeout/retry logic (!168)
 * Fix tests leaving orphaned tabs in Chrome (!165)
+* Don't fake event timestamps when clicking elements (!164)
 
 ## 2.9.2
 
