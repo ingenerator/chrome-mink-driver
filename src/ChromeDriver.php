@@ -730,8 +730,18 @@ JS;
      */
     protected function isTextTypeInput($xpath): bool
     {
-        // phpcs:ignore Generic.Files.LineLength.TooLong
-        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
+        // See ChromeDriverInputEventsTest for list of all W3C input types and rationale for which we count as `text`
+        // Note that any unknown type (e.g. `<input type=made_up>`) is already coalesced by the browser so Chrome will
+        // return `element.type === 'text'` for these elements.
+        $is_text_field = <<<'JS'
+            (
+                element.tagName == 'INPUT'
+                && ['text', 'search', 'tel', 'url', 'email', 'password', 'number'].includes(element.type)
+            )
+            || (element.tagName == 'TEXTAREA')
+            || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')
+            JS;
+
         if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
             return true;
         } else {
@@ -770,7 +780,9 @@ JS;
         if (!$this->runScriptOnXpathElement($xpath, $script)) {
             throw new DriverException('Element is not visible and can not be focused');
         }
-        for ($i = 0; $i < strlen($current_value); $i++) {
+
+        // Remove the current value if present (nb an empty contenteditable returns `null` as current value)
+        for ($i = 0; $i < strlen($current_value ?? ''); $i++) {
             $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
             $this->page->send('Input.dispatchKeyEvent', $parameters);
             $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
@@ -778,22 +790,42 @@ JS;
             $this->page->send('Input.dispatchKeyEvent', $parameters);
             $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
         }
+
+        // Then add the new value
         for ($i = 0; $i < mb_strlen($value); $i++) {
             $char = mb_substr($value, $i, 1);
-            if ($char == "\n") {
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
+            // For 'normal' chars, the `text` devtools property & the `key` event property are the desired character
+            $text = $key = $char;
+            if ($char === "\n") {
+                // For newlines, the `text` and `key` have special values. This is also the case for other special
+                // (control etc) keys, but newline is the only one that can also be added as part of the string value
+                // of a text field (e.g. a textarea or contenteditable).
+                $text = chr(13);
+                $key = 'Enter';
             }
-            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
-            $this->keyDown($xpath, $char);
-            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-            $this->keyUp($xpath, $char);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $text, 'key' => $key]);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp', 'key' => $key]);
         }
         usleep(5000);
 
         try {
-            $this->triggerEvent($xpath, 'change');
+            // Remove the focus from the element if the field still has focus, in order to trigger the change event
+            // if the element supports it.
+            //
+            // By doing this instead of simply triggering the change event for the given xpath we ensure that:
+            // a) the change event will not be triggered twice for the same element if it has lost focus in the meantime
+            //    (e.g. if the original input element has custom javascript behaviour that focuses another control
+            //    during data entry, such as an autocomplete / typeahead).
+            // b) the change event will not be triggered for contenteditable elements (which do not natively fire
+            //    `change`).
+            // c) the change event will bubble up the document the same as native change events.
+            //
+            // If the element has lost focus already then there is nothing to do as this will already have caused
+            // the triggering of the change event for that element and/or we assume that clientside code that focused
+            // an alternate element has taken responsibility for triggering events on input / change.
+            $this->runScriptOnXpathElement($xpath, 'if (element === document.activeElement) {element.blur();}');
         } catch (ElementNotFoundException $e) {
-            // Ignore, sometimes input elements can get hidden after they are modified.
+            // Ignore, sometimes input elements can get removed from a document after they are modified.
             // For example, editing a title inline and sending a newline character at the end
             // which submits the inline edit and saves the changes.
         }
@@ -817,7 +849,6 @@ JS;
         }
 
         $json_value = is_numeric($value) ? $value : json_encode($value);
-        $text_value = json_encode($value);
         $expression = <<<JS
     var expected_value = $json_value;
     var result = 0;
@@ -858,9 +889,6 @@ JS;
             }
         }
     } else if (element.tagName == 'INPUT' && element.type == 'file') {
-    } else if (element.tagName == 'INPUT' && 
-        (element.type == 'password' || element.type == 'tel' || element.type == 'email')) {
-        element.value = $text_value;
     } else {
         element.value = expected_value
     }
