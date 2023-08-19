@@ -2,6 +2,10 @@
 
 namespace DMore\ChromeDriver;
 
+/**
+ *
+ * @deprecated This exception is no longer used or thrown by this library.
+ */
 class StreamReadException extends \Exception
 {
     /**

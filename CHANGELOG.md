@@ -6,6 +6,7 @@ Changelog
 * Introduce code coverage in CI (!154, !160)
 * Add `make` commands for development tasks (!159)
 * Fix event dispatch and input type handling for all HTML input types (!166)
+* Remove broken StreamReadException & canDevToolsConnectionBeEstablished timeout/retry logic (!168)
 
 ## 2.9.2
 

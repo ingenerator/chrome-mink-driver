@@ -63,7 +63,6 @@ class ChromePage extends DevToolsConnection
      * @param $url
      * @throws ConnectionException
      * @throws DriverException
-     * @throws StreamReadException
      */
     public function visit($url): void
     {
@@ -104,19 +103,6 @@ class ChromePage extends DevToolsConnection
                         return $this->page_ready;
                     }
                 );
-            } catch (StreamReadException $exception) {
-                if ($exception->isTimedOut() && false === $this->canDevToolsConnectionBeEstablished()) {
-                    throw new \RuntimeException(
-                        sprintf(
-                            'Chrome is unreachable via "%s" and might have crashed. Please see docs/troubleshooting.md',
-                            $this->getUrl()
-                        )
-                    );
-                }
-
-                if (!$exception->isEof() && $exception->isTimedOut()) {
-                    $this->waitForLoad();
-                }
             } catch (ConnectionException $exception) {
                 throw new DriverException("Page not loaded");
             }
@@ -129,7 +115,6 @@ class ChromePage extends DevToolsConnection
      * @return array|null
      * @throws ConnectionException
      * @throws DriverException
-     * @throws StreamReadException
      */
     public function getResponse()
     {
@@ -185,7 +170,6 @@ class ChromePage extends DevToolsConnection
      *
      * @throws ConnectionException
      * @throws DriverException
-     * @throws StreamReadException
      */
     private function waitForHttpResponse()
     {
