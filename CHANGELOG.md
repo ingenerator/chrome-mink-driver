@@ -5,7 +5,7 @@ Changelog
 * Error handling for invalid form values (#140)
 * Introduce code coverage in CI (!154, !160)
 * Add `make` commands for development tasks (!159)
-* Fix event dispatch and input type handling for all HTML input types (!166)
+* Fix event dispatch and input type handling for all HTML input types (!166, #92, #95, #111, #139)
 * Remove broken StreamReadException & canDevToolsConnectionBeEstablished timeout/retry logic (!168)
 * Fix tests leaving orphaned tabs in Chrome (!165)
 * Don't fake event timestamps when clicking elements (!164)
