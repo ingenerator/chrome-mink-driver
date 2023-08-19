@@ -5,6 +5,7 @@ Changelog
 * Error handling for invalid form values (#140)
 * Introduce code coverage in CI (!154, !160)
 * Add `make` commands for development tasks (!159)
+* Fix event dispatch and input type handling for all HTML input types (!166)
 
 ## 2.9.2
 
