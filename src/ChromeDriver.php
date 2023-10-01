@@ -848,7 +848,7 @@ JS;
             throw new DriverException('Only string values can be used for a ' . $fieldType . ' input.');
         }
 
-        if (\is_bool($value) && in_array($fieldType, ['select', 'select-one', 'submit'])) {
+        if (\is_bool($value) && in_array($fieldType, ['select', 'select-one', 'submit', 'color', 'date', 'time'])) {
             throw new DriverException('Boolean values cannot be used for a ' . $fieldType . ' element.');
         }
 
@@ -857,7 +857,7 @@ JS;
         }
 
         if (in_array($fieldType, ['submit', 'image', 'button', 'reset'])) {
-            throw new DriverException(sprintf('Impossible to set value on "%s" element.', $xpath));
+            throw new DriverException(sprintf('Cannot set value on "%s" element.', $xpath));
         }
 
         if (\is_null($value)) {
