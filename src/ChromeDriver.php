@@ -852,6 +852,10 @@ JS;
             throw new DriverException('Boolean values cannot be used for a ' . $fieldType . ' element.');
         }
 
+        if ($value === [] && in_array($fieldType, ['color', 'date', 'time'])) {
+            throw new DriverException(sprintf('Empty array value cannot be used for a "%s" element.', $fieldType));
+        }
+
         if (\is_array($value) && $fieldType === 'submit') {
             throw new DriverException(sprintf('Array values cannot be used for a "%s" element.', $fieldType));
         }
