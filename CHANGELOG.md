@@ -9,6 +9,7 @@ Changelog
 * Remove broken StreamReadException & canDevToolsConnectionBeEstablished timeout/retry logic (!168)
 * Fix tests leaving orphaned tabs in Chrome (!165)
 * Don't fake event timestamps when clicking elements (!164)
+* Improve setValue() validation for unexpected inputs (#143, !171)
 
 ## 2.9.2
 

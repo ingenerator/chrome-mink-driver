@@ -774,6 +774,10 @@ JS;
             throw new DriverException('Textual and file form fields don\'t support array or boolean values');
         }
 
+        if (\is_null($value)) {
+            throw new DriverException('Textual and file form fields don\'t support null values');
+        }
+
         $current_value = $this->getValue($xpath);
         $script = 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }';
         if (!$this->runScriptOnXpathElement($xpath, $script)) {
@@ -839,12 +843,25 @@ JS;
     private function setNonTextTypeValue($xpath, $value)
     {
         $fieldType = $this->getElementProperty($xpath, 'type');
+
         if (!\is_string($value) && in_array($fieldType, ['file', 'radio'])) {
             throw new DriverException('Only string values can be used for a ' . $fieldType . ' input.');
         }
 
-        if (\is_bool($value) && in_array($fieldType, ['select', 'select-one'])) {
+        if (\is_bool($value) && in_array($fieldType, ['select', 'select-one', 'submit', 'color', 'date', 'time'])) {
             throw new DriverException('Boolean values cannot be used for a ' . $fieldType . ' element.');
+        }
+
+        if ($value === [] && in_array($fieldType, ['color', 'date', 'time'])) {
+            throw new DriverException(sprintf('Empty array value cannot be used for a "%s" element.', $fieldType));
+        }
+
+        if (in_array($fieldType, ['submit', 'image', 'button', 'reset'])) {
+            throw new DriverException(sprintf('Cannot set value on "%s" element.', $xpath));
+        }
+
+        if (\is_null($value)) {
+            throw new DriverException('Non-text fields don\'t support null values');
         }
 
         $json_value = is_numeric($value) ? $value : json_encode($value);
