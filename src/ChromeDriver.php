@@ -856,10 +856,6 @@ JS;
             throw new DriverException(sprintf('Empty array value cannot be used for a "%s" element.', $fieldType));
         }
 
-        if (\is_array($value) && $fieldType === 'submit') {
-            throw new DriverException(sprintf('Array values cannot be used for a "%s" element.', $fieldType));
-        }
-
         if (in_array($fieldType, ['submit', 'image', 'button', 'reset'])) {
             throw new DriverException(sprintf('Cannot set value on "%s" element.', $xpath));
         }
