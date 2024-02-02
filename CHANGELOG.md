@@ -2,6 +2,7 @@ Changelog
 =========
 
 ## Unreleased
+* Switch to phrity/websocket package - successor to textalk/websocket which is no longer maintained (#144, !167)
 * Error handling for invalid form values (#140)
 * Introduce code coverage in CI (!154, !160)
 * Add `make` commands for development tasks (!159)
