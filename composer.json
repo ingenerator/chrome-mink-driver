@@ -18,7 +18,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "behat/mink": "^1.9",
-        "textalk/websocket": "^1.2.0"
+        "phrity/websocket": "^1.7.0"
     },
     "require-dev": {
         "mink/driver-testsuite": "dev-master",
