@@ -11,6 +11,7 @@ Changelog
 * Fix tests leaving orphaned tabs in Chrome (!165)
 * Don't fake event timestamps when clicking elements (!164)
 * Improve setValue() validation for unexpected inputs (#143, !171)
+* Remove `docker` tag from CI jobs (!172)
 
 ## 2.9.2
 

@@ -16,7 +16,6 @@ workflow:
 
 .test_template:
   stage: test
-  tags: [docker]
   retry: 2
   before_script:
     - bin/wait-for-chrome.sh
@@ -65,7 +64,6 @@ Makefile:
 GrumPHP:
   image: composer
   stage: lint
-  tags: [docker]
   script:
     - composer require --dev --prefer-dist --ansi --no-progress --sort-packages phpro/grumphp-shim ergebnis/composer-normalize enlightn/security-checker
     - vendor/bin/grumphp run -n
