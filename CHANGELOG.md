@@ -2,16 +2,21 @@ Changelog
 =========
 
 ## Unreleased
+
+
+## 2.9.3
+
 * Switch to phrity/websocket package - successor to textalk/websocket which is no longer maintained (#144, !167)
 * Error handling for invalid form values (#140)
 * Introduce code coverage in CI (!154, !160)
 * Add `make` commands for development tasks (!159)
-* Fix event dispatch and input type handling for all HTML input types (!166, #92, #95, #111, #139)
+* Fix event dispatch and input type handling for all HTML input types (#92, #95, #111, #139, !166)
 * Remove broken StreamReadException & canDevToolsConnectionBeEstablished timeout/retry logic (!168)
 * Fix tests leaving orphaned tabs in Chrome (!165)
 * Don't fake event timestamps when clicking elements (!164)
 * Improve setValue() validation for unexpected inputs (#143, !171)
 * Remove `docker` tag from CI jobs (!172)
+* Refactor ChromeDriver::setValue (#125)
 
 ## 2.9.2
 
