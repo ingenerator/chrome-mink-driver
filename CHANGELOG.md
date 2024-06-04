@@ -3,6 +3,7 @@ Changelog
 
 ## Unreleased
 
+* Fix returned value of `isTextTypeInput` (#149)
 
 ## 2.9.3
 
