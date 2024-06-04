@@ -755,11 +755,7 @@ JS;
             || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')
             JS;
 
-        if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
-            return true;
-        } else {
-            return false;
-        }
+        return (bool) $this->runScriptOnXpathElement($xpath, $is_text_field);
     }
 
     /**
@@ -767,7 +763,7 @@ JS;
      */
     public function setValue($xpath, $value)
     {
-        if (!$this->isTextTypeInput($xpath)) {
+        if ($this->isTextTypeInput($xpath)) {
             $this->setTextTypeValue($xpath, $value);
         } else {
             $this->setNonTextTypeValue($xpath, $value);
@@ -911,7 +907,7 @@ JS;
             expected_value = [expected_value]
         }
         for (var i = 0; i < element.options.length; i++) {
-            if ((element.multiple && expected_value.includes(element.options[i].value)) 
+            if ((element.multiple && expected_value.includes(element.options[i].value))
                 || element.options[i].value == expected_value) {
                 element.options[i].selected = true;
             } else {
