@@ -26,6 +26,7 @@ workflow:
     - vendor/bin/phpunit --colors=always --log-junit junit.xml
   needs: []
   artifacts:
+    name: "artifacts-${CI_JOB_NAME}-${CI_COMMIT_SHA}"
     paths:
       - junit.xml
     reports:
