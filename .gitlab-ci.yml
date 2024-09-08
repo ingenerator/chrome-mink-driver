@@ -19,6 +19,7 @@ workflow:
   retry: 2
   before_script:
     - bin/wait-for-chrome.sh
+    - php --version
     - curl -s http://localhost:9222/json/version
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
