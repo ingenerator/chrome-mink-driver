@@ -5,6 +5,7 @@ Changelog
 
 * Test using [zenika/alpine-chrome](https://github.com/Zenika/alpine-chrome) instead of custom build(s) (#155)
 * Fix returned value of `isTextTypeInput` (#149)
+* Session reset should close non-main windows (#152, !178)
 
 ## 2.9.3
 
