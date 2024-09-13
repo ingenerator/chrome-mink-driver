@@ -17,12 +17,29 @@ workflow:
 .test_template:
   stage: test
   retry: 2
+  services:
+    - name: zenika/alpine-chrome:latest
+      alias: chrome
+      command: [
+        "--remote-debugging-address=0.0.0.0",
+        "--remote-debugging-port=9222",
+        "--no-sandbox",
+        "--use-gl=swiftshader",
+        "--disable-software-rasterizer",
+        "--disable-dev-shm-usage"
+      ]
+  variables:
+    CHROME_DEBUG_URL: http://chrome:9222
+    CHROME_WAIT_TIME: 3
+    FF_NETWORK_PER_BUILD: 1
   before_script:
     - bin/wait-for-chrome.sh
     - php --version
-    - curl -s http://localhost:9222/json/version
+    - >
+      curl --silent --show-error --header "Host: localhost" http://chrome:9222/json/version | tee chrome-version.json
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
+    - cp .gitlab-ci/phpunit.xml.dist phpunit.xml
   script:
     - vendor/bin/phpunit --colors=always --log-junit junit.xml
   needs: []
@@ -86,51 +103,6 @@ PHP 8.1:
 PHP 8.2:
   extends: .test_template
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.2
-
-Chromium:
-  extends: .test_template
-  variables:
-    CHROME_BUILD: chromium
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Chrome unstable:
-  extends: .test_template
-  variables:
-    CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Chrome beta:
-  extends: .test_template
-  variables:
-    CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Headed:
-  extends: .test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Headed chrome unstable:
-  extends: .test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Headed chrome beta:
-  extends: .test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Headed chromium:
-  extends: .test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: chromium
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
 
 # This job collects coverage also.
 Report PHPUnit coverage:
