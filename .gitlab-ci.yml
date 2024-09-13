@@ -104,51 +104,6 @@ PHP 8.2:
   extends: .test_template
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.2
 
-Chromium:
-  extends: .test_template
-  variables:
-    CHROME_BUILD: chromium
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Chrome unstable:
-  extends: .test_template
-  variables:
-    CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Chrome beta:
-  extends: .test_template
-  variables:
-    CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Headed:
-  extends: .test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Headed chrome unstable:
-  extends: .test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Headed chrome beta:
-  extends: .test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
-Headed chromium:
-  extends: .test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: chromium
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
-
 # This job collects coverage also.
 Report PHPUnit coverage:
   extends: .test_template
