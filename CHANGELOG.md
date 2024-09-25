@@ -3,6 +3,8 @@ Changelog
 
 ## Unreleased
 
+* Support PHP 8.3
+
 ## 2.7.0.8 (CUSTOM INGENERATOR RELEASE) (2023-08-09)
 
 * Bring in selected changes from upstream package to fix various minor bugs, new test requirements from the core mink
