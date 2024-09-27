@@ -1424,7 +1424,7 @@ JS;
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
      */
-    protected function getKeycodeKeyValue(int $keycode): string|null
+    protected function getKeycodeKeyValue(int $keycode)
     {
         switch ($keycode) {
             case 8:
@@ -1496,8 +1496,8 @@ JS;
      */
     protected function triggerKeyboardEvent(
         string $xpath,
-        string|int $char,
-        string|null $modifier,
+        $char,
+        $modifier,
         string $event
     ): void {
         // Set up the devtools dispatchKeyEvent parameters, starting with type.
@@ -1523,10 +1523,13 @@ JS;
                 $parameters['key'] = $this->getKeycodeKeyValue($char) ?? '';
                 $parameters['text'] = $send_text ? chr($char) : '';
                 break;
+
+            default:
+                throw new DriverException("Unsupported char parameter type '" . gettype($char) . "'.");
         }
 
         // Set the modifier, if present.
-        if (!empty($modifier)) {
+        if (gettype($modifier) === 'string') {
             $modifiers = [
                 KeyModifier::CTRL => 2,
                 KeyModifier::ALT => 1,
