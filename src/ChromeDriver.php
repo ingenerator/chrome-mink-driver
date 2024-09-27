@@ -1497,7 +1497,7 @@ JS;
     protected function triggerKeyboardEvent(
         string $xpath,
         string|int $char,
-        string|null $modifier = null,
+        string|null $modifier,
         string $event
     ): void {
         // Set up the devtools dispatchKeyEvent parameters, starting with type.
