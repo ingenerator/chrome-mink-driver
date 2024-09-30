@@ -3,6 +3,15 @@ Changelog
 
 ## Unreleased
 
+## 2.9.4.1 (CUSTOM INGENERATOR RELEASE) (2024-09-30)
+
+* Fully resets our fork back to the unreleased version of upstream, plus adds PHP8.3 support. The majority of our 
+  changes are now present in upstream (either exactly, or in a slightly different / superseded form).
+
+* REMOVES our custom implementation for handling native javascript dialogs (2.7.0.2) in favour of tackling this with the
+  built-in methods to acknowledge a JS dialog *after* it has fired. This will require changes to projects that were
+  relying on our custom method to register a callback handler.
+
 ## 2.7.0.8 (CUSTOM INGENERATOR RELEASE) (2023-08-09)
 
 * Bring in selected changes from upstream package to fix various minor bugs, new test requirements from the core mink
