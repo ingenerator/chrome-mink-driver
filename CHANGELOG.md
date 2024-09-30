@@ -1,6 +1,138 @@
 Changelog
 =========
 
+## Unreleased
+
+## 2.9.4.1 (CUSTOM INGENERATOR RELEASE) (2024-09-30)
+
+* Fully resets our fork back to the unreleased version of upstream, plus adds PHP8.3 support. The majority of our 
+  changes are now present in upstream (either exactly, or in a slightly different / superseded form).
+
+* REMOVES our custom implementation for handling native javascript dialogs (2.7.0.2) in favour of tackling this with the
+  built-in methods to acknowledge a JS dialog *after* it has fired. This will require changes to projects that were
+  relying on our custom method to register a callback handler.
+
+## 2.7.0.8 (CUSTOM INGENERATOR RELEASE) (2023-08-09)
+
+* Bring in selected changes from upstream package to fix various minor bugs, new test requirements from the core mink
+  driver testsuite, and PHP 8.2 support - see https://github.com/ingenerator/chrome-mink-driver/pull/16
+
+* Advertise supported php versions and run tests on php8.2
+
+* Switch from textalk/websocket to the more-maintained fork phrity/websocket.
+
+## 2.7.0.7 (CUSTOM INGENERATOR RELEASE) (2022-10-31)
+
+* Bring in selected changes from upstream package to reintroduce CI & fix support for PHP 8.1. Note the change from
+  urlencode to rawurlencode when setting cookies through the driver (I don't think we actually do this).
+
+## 2.7.0.6 (CUSTOM INGENERATOR RELEASE) (2022-02-23)
+
+* Don't fake the timestamps on click events - resolves issues with javascript frameworks ignoring events due to
+  incorrect timestamps.
+
+## 2.7.0.5 (CUSTOM INGENERATOR RELEASE) (2021-11-25)
+
+* Update handling of ConnectionException to handle the change to how textalk/websocket provides the stream metadata
+  since v1.5.0 - it no longer json-encodes the stream status in the exception message.
+
+## 2.7.0.4 (CUSTOM INGENERATOR RELEASE) (2021-11-25)
+
+* Add debugging output to try and understand why we have started getting fatal `Trying to access array offset on value
+  of type null` in some cases following a ConnectionException.
+
+## 2.7.0.3 (CUSTOM INGENERATOR RELEASE) (2021-10-12)
+
+* Fix PHP8 deprecation warning as optional constructor args can't be before required ones
+
+## 2.7.0.2 (CUSTOM INGENERATOR RELEASE) (2020-10-29)
+
+* [BREAKING] Rewrite how native dialogs (alert, prompt, confirm, beforeunload) are handled. You must now
+  register a callback *in advance* to handle any dialog that the browser shows. If you do not explicitly
+  handle the dialog, an UnexpectedJavascriptDialogException will be thrown.
+  https://github.com/ingenerator/chrome-mink-driver/pull/4
+
+## 2.7.0.1 (CUSTOM INGENERATOR RELEASE) (2020-10-16)
+
+* Fix change event not bubbling after input value set
+  https://github.com/ingenerator/chrome-mink-driver/pull/3
+
+## Unreleased
+
+* Test using [zenika/alpine-chrome](https://github.com/Zenika/alpine-chrome) instead of custom build(s) (#155)
+* Fix returned value of `isTextTypeInput` (#149)
+* Session reset should close non-main windows (#152, !178)
+
+## 2.9.3
+
+* Switch to phrity/websocket package - successor to textalk/websocket which is no longer maintained (#144, !167)
+* Error handling for invalid form values (#140)
+* Introduce code coverage in CI (!154, !160)
+* Add `make` commands for development tasks (!159)
+* Fix event dispatch and input type handling for all HTML input types (#92, #95, #111, #139, !166)
+* Remove broken StreamReadException & canDevToolsConnectionBeEstablished timeout/retry logic (!168)
+* Fix tests leaving orphaned tabs in Chrome (!165)
+* Don't fake event timestamps when clicking elements (!164)
+* Improve setValue() validation for unexpected inputs (#143, !171)
+* Remove `docker` tag from CI jobs (!172)
+* Refactor ChromeDriver::setValue (#125)
+
+## 2.9.2
+
+* Tests cover PHP versions 7.4 to 8.2 (!149)
+* Fix variable syntax deprecations (!149)
+* Fix headed mode in Chrome v111+ using HTTP PUT request method when opening a new tab per https://chromedevtools.github.io/devtools-protocol/ (!145, !146, !147)
+
+## 2.9.1
+
+* Use correct default values for domWaitTimeout and socketTimeout when unset (#133, !143)
+
+## 2.9.0
+
+* Throw DriverException if file to be uploaded is not found (#12, !128)
+* ConnectionException / StreamReadException handling improvements (!133, #68, #99, #119)
+* Test coverage for accented character value handling (#105)
+* Fix for file upload handling (behat-chrome-extension#12, !128)
+* Test improvements (#124, !129)
+* Documentation improvements (!127)
+* Coding standards fixes (!115, !132, !136)
+
+## 2.8.1
+
+* Cookie encoding bugfix (#86)
+* Use upstream Mink test suite (#116)
+* Tests cover PHP versions 7.4 to 8.1 (#108)
+* Documentation improvements (!125)
+* Coding standards fixes (!115)
+
+## 2.8.0
+
+* Improved support for Behat 1.8.x, fixes to CI (!93, #94, #104)
+* Support obtaining event listeners for elements (!91)
+* Correctly use configured DevTools connection URL (!90, #93)
+* Re-throw dead connection exceptions (!88)
+* Support `setValue()` on 'url' input types (!87)
+* Support clearing and retrieval of messages from `console.log` (!86, #97)
+* Support multiple file attachments (!83)
+* Support non-HTML responses (!78)
+* Updated Event dispatching for input change to add support for React components (!74)
+* Full page and screen screenshot functionality (!72, !79)
+* Improve exception message on Chrome error (!71)
+* Handle experimental Page.navigatedWithinDocument (!70)
+
+## 2.7.0
+
+* Support `setValue()` on 'number' input types (!81)
+* Correct types for `printToPDF()` method (!68)
+* Add function handling for evaluated JS return values (!67, #67)
+* PHP7.3 fixes and test coverage (!66)
+* Add ext-json to requirements in composer.json (!64)
+* Set Host header for compatibility with Chrome 66+ (!63)
+* Non-strict comparison of radio button values (!62)
+* Add method to retrieve all cookies (!61)
+* Replace deprecated method to ignore SSL certificate errors (!60, #57)
+* Remove `event.key` code to fix conflict with non-printable chars (!57)
+
 ## 2.6.4
 
 * Fixed StreamReadException not being caught when browser fails to respond on stop

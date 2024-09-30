@@ -1,4 +1,5 @@
 <?php
+
 namespace DMore\ChromeDriver;
 
 use Behat\Mink\Driver\CoreDriver;
@@ -9,34 +10,81 @@ use WebSocket\ConnectionException;
 
 class ChromeDriver extends CoreDriver
 {
-    /** @var ChromeBrowser */
+    /**
+     * @var ChromeBrowser
+     */
     private $browser;
-    /** @var ChromePage */
+
+    /**
+     * @var ChromePage
+     */
     private $page;
+
+    /**
+     * @var bool Is driver started.
+     */
     private $is_started = false;
-    /** @var string */
+
+    /**
+     * @var string
+     */
     private $api_url;
-    /** @var string */
+
+    /**
+     * @var string
+     */
     private $ws_url;
-    /** @var string */
+
+    /**
+     * @var string
+     */
     private $current_window;
-    /** @var string */
+
+    /**
+     * @var string
+     */
     private $main_window;
-    /** @var HttpClient */
+
+    /**
+     * @var HttpClient
+     */
     private $http_client;
-    /** @var string[] */
+
+    /**
+     * @var string[]
+     */
     private $request_headers = [];
-    /** @var string */
+
+    /**
+     * @var string
+     */
     private $base_url;
+
     /**
      * @var string The document node to run xpath queries on.
      * Can either be 'document' or valid javascript for an iframe's javascript
      */
     private $document = 'document';
+
     /**
      * @var int How many milliseconds we should wait for DOM to be ready after each action/transition.
      */
     private $domWaitTimeout;
+
+    /**
+     * Default value for $domWaitTimeout.
+     *
+     * @var int
+     */
+    public static $domWaitTimeoutDefault = 3000;
+
+    /**
+     * Default value for $socketTimeout.
+     *
+     * @var int
+     */
+    public static $socketTimeoutDefault = 10;
+
     /**
      * @var array
      */
@@ -44,13 +92,21 @@ class ChromeDriver extends CoreDriver
 
     /**
      * ChromeDriver constructor.
+     *
      * @param string $api_url
      * @param HttpClient $http_client
-     * @param $base_url
+     * @param string $base_url
      * @param array $options
      */
-    public function __construct($api_url = 'http://localhost:9222', HttpClient $http_client = null, $base_url, $options = [])
-    {
+    public function __construct(
+        $api_url = 'http://localhost:9222',
+        HttpClient $http_client = null,
+        $base_url = null,
+        $options = []
+    ) {
+        if (empty($base_url)) {
+            throw new \InvalidArgumentException("Base URL can not be empty.");
+        }
         if ($http_client == null) {
             $http_client = new HttpClient();
         }
@@ -58,10 +114,13 @@ class ChromeDriver extends CoreDriver
         $this->api_url = $api_url;
         $this->ws_url = str_replace('http', 'ws', $api_url);
         $this->base_url = $base_url;
-        $this->browser = new ChromeBrowser($this->ws_url . '/devtools/browser', isset($options['socketTimeout']) ? $options['socketTimeout'] : 10);
+        $this->browser = new ChromeBrowser(
+            $this->ws_url . '/devtools/browser',
+            $options['socketTimeout'] ?? self::$socketTimeoutDefault
+        );
         $this->browser->setHttpClient($http_client);
         $this->browser->setHttpUri($api_url);
-        $this->domWaitTimeout = isset($options['domWaitTimeout']) ? $options['domWaitTimeout'] : 3000;
+        $this->domWaitTimeout = $options['domWaitTimeout'] ?? self::$domWaitTimeoutDefault;
         $this->options = $options;
     }
 
@@ -74,8 +133,8 @@ class ChromeDriver extends CoreDriver
 
         // Only set download options in headless mode
         if (true === $this->browser->isHeadless()) {
-            $downloadBehavior = isset($this->options['downloadBehavior']) ? $this->options['downloadBehavior'] : 'default';
-            $downloadPath = isset($this->options['downloadPath']) ? $this->options['downloadPath'] : '/tmp/';
+            $downloadBehavior = $this->options['downloadBehavior'] ?? 'default';
+            $downloadPath = $this->options['downloadPath'] ?? '/tmp/';
             if ($downloadBehavior !== 'default' || rtrim($downloadPath, '/') !== '/tmp') {
                 $this->page->send(
                     'Page.setDownloadBehavior',
@@ -122,11 +181,11 @@ class ChromeDriver extends CoreDriver
      * implementations are free to handle it silently or to fail with an
      * exception.
      *
-     * @throws DriverException When the driver cannot be closed
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the driver cannot be closed
      */
     public function stop()
     {
-        $this->ensureStarted();
         try {
             $this->reset();
             foreach ($this->getWindowNames() as $key => $window_id) {
@@ -138,7 +197,6 @@ class ChromeDriver extends CoreDriver
             $this->browser->close();
         } catch (ConnectionException $exception) {
         } catch (DriverException $exception) {
-        } catch (StreamReadException $exception) {
         }
 
         $this->is_started = false;
@@ -171,7 +229,15 @@ class ChromeDriver extends CoreDriver
         $this->ensureStarted();
         $this->document = 'document';
         $this->deleteAllCookies();
-        $this->connectToWindow($this->main_window);
+        foreach ($this->getWindowNames() as $windowId) {
+            foreach ($this->getWindowNames() as $key => $window_id) {
+                if ($window_id === $this->main_window) {
+                    continue;
+                }
+                $this->http_client->get($this->api_url . '/json/close/' . $window_id);
+            }
+        }
+        $this->switchToWindow($this->main_window);
         $this->page->reset();
         $this->request_headers = [];
         $this->sendRequestHeaders();
@@ -180,9 +246,11 @@ class ChromeDriver extends CoreDriver
     /**
      * Visit specified URL.
      *
-     * @param string $url url of the page
+     * @param string $url
+     *   URL of the page
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function visit($url)
     {
@@ -198,7 +266,8 @@ class ChromeDriver extends CoreDriver
      *
      * @return string
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getCurrentUrl()
     {
@@ -209,7 +278,8 @@ class ChromeDriver extends CoreDriver
     /**
      * Reloads current page.
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function reload()
     {
@@ -220,7 +290,8 @@ class ChromeDriver extends CoreDriver
     /**
      * Moves browser forward 1 page.
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function forward()
     {
@@ -232,7 +303,8 @@ class ChromeDriver extends CoreDriver
     /**
      * Moves browser backward 1 page.
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function back()
     {
@@ -360,7 +432,8 @@ JS;
      * @param string $name
      * @param string $value
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function setCookie($name, $value = null)
     {
@@ -378,7 +451,7 @@ JS;
             }
         } else {
             $url = $this->base_url . '/';
-            $value = urlencode($value);
+            $value = rawurlencode($value);
             $this->page->send('Network.setCookie', ['url' => $url, 'name' => $name, 'value' => $value]);
         }
     }
@@ -390,7 +463,8 @@ JS;
      *
      * @return string|null
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getCookie($name)
     {
@@ -398,7 +472,7 @@ JS;
 
         foreach ($result['cookies'] as $cookie) {
             if ($cookie['name'] == $name) {
-                return urldecode($cookie['value']);
+                return rawurldecode($cookie['value']);
             }
         }
         return null;
@@ -409,7 +483,8 @@ JS;
      *
      * @return array
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getCookies()
     {
@@ -431,7 +506,8 @@ JS;
      *
      * @return string
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *  When the operation cannot be done
      */
     public function getContent()
     {
@@ -448,7 +524,8 @@ JS;
      * @return string screenshot of MIME type image/* depending
      *                on driver (e.g., image/png, image/jpeg)
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *  When the operation cannot be done
      */
     public function getScreenshot()
     {
@@ -456,7 +533,10 @@ JS;
         $weight = ceil($metrics['contentSize']['width']);
         $height = ceil($metrics['contentSize']['height']);
         $this->setVisibleSize($weight, $height);
-        $screenshot = $this->page->send('Page.captureScreenshot', ['clip' =>  ['x' => 0, 'y' => 0, 'width' => $weight, 'height' => $height, 'scale' => 1]]);
+        $screenshot = $this->page->send(
+            'Page.captureScreenshot',
+            ['clip' => ['x' => 0, 'y' => 0, 'width' => $weight, 'height' => $height, 'scale' => 1]]
+        );
         return base64_decode($screenshot['data']);
     }
 
@@ -466,7 +546,8 @@ JS;
      * @return string screenshot of MIME type image/* depending
      *                on driver (e.g., image/png, image/jpeg)
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getFullPageScreenshot()
     {
@@ -476,7 +557,10 @@ JS;
 
         // Overwrite clip for full page at all times.
         $clip = ['x' => 0, 'y' => 0, 'width' => $width, 'height' => $height, 'scale' => 1];
-        $this->page->send('Emulation.setDeviceMetricsOverride', ['mobile'=> false, 'deviceScaleFactor' => 1, 'width' => $width, 'height' => $height,]);
+        $this->page->send(
+            'Emulation.setDeviceMetricsOverride',
+            ['mobile' => false, 'deviceScaleFactor' => 1, 'width' => $width, 'height' => $height,]
+        );
 
         $screenshot = $this->page->send('Page.captureScreenshot', ['clip' => $clip]);
         return base64_decode($screenshot['data']);
@@ -500,7 +584,8 @@ JS;
      *
      * @return string the name of the current window
      *
-     * @throws DriverException                  When the operation cannot be done
+     * @throws \Behat\Mink\Exception\DriverException
+     *   When the operation cannot be done
      */
     public function getWindowName()
     {
@@ -625,7 +710,7 @@ JS;
     {
         $expression = $this->getXpathExpression($xpath);
         $expression .= <<<JS
-        element = xpath_result.iterateNext();
+    element = xpath_result.iterateNext();
     var value = null
 
     if (element.tagName == 'INPUT' && element.type == 'checkbox') {
@@ -660,58 +745,144 @@ JS;
     }
 
     /**
+     * @param $xpath
+     * @return bool
+     * @throws ElementNotFoundException
+     */
+    protected function isTextTypeInput($xpath): bool
+    {
+        // See ChromeDriverInputEventsTest for list of all W3C input types and rationale for which we count as `text`
+        // Note that any unknown type (e.g. `<input type=made_up>`) is already coalesced by the browser so Chrome will
+        // return `element.type === 'text'` for these elements.
+        $is_text_field = <<<'JS'
+            (
+                element.tagName == 'INPUT'
+                && ['text', 'search', 'tel', 'url', 'email', 'password', 'number'].includes(element.type)
+            )
+            || (element.tagName == 'TEXTAREA')
+            || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')
+            JS;
+
+        return (bool) $this->runScriptOnXpathElement($xpath, $is_text_field);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function setValue($xpath, $value)
     {
-        $is_text_field = "(element.tagName == 'INPUT' && (element.type == 'text' || element.type == 'url' || element.type == 'number' || element.type == 'search')) || element.tagName == 'TEXTAREA' || (element.hasAttribute('contenteditable') && element.getAttribute('contenteditable') != 'false')";
-        if (!$this->runScriptOnXpathElement($xpath, $is_text_field)) {
-            $this->setNonTextTypeValue($xpath, $value);
+        if ($this->isTextTypeInput($xpath)) {
+            $this->setTextTypeValue($xpath, $value);
         } else {
-            $current_value = $this->getValue($xpath);
-            if (!$this->runScriptOnXpathElement($xpath, 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }')) {
-              throw new DriverException('Element is not visible and can not be focused');
-            }
-            for ($i = 0; $i < strlen($current_value); $i++) {
-                $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
-                $this->page->send('Input.dispatchKeyEvent', $parameters);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-                $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 46, 'windowsVirtualKeyCode' => 46];
-                $this->page->send('Input.dispatchKeyEvent', $parameters);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-            }
-            for ($i = 0; $i < mb_strlen($value); $i++) {
-                $char = mb_substr($value, $i, 1);
-                if ($char == "\n") {
-                    $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => chr(13)]);
-                }
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $char]);
-                $this->keyDown($xpath, $char);
-                $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
-                $this->keyUp($xpath, $char);
-            }
-            usleep(5000);
-
-            try {
-                $this->triggerEvent($xpath, 'change');
-            } catch (ElementNotFoundException $e) {
-                // Ignore, sometimes input elements can get hidden after they are modified.
-                // For example, editing a title inline and sending a newline character at the end
-                // which submits the inline edit and saves the changes.
-            }
+            $this->setNonTextTypeValue($xpath, $value);
         }
     }
 
     /**
      * @param $xpath
      * @param $value
+     * @return void
+     * @throws DriverException
+     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\UnsupportedDriverActionException
+     */
+    protected function setTextTypeValue($xpath, $value)
+    {
+        if (\is_array($value) || \is_bool($value)) {
+            throw new DriverException('Textual and file form fields don\'t support array or boolean values');
+        }
+
+        if (\is_null($value)) {
+            throw new DriverException('Textual and file form fields don\'t support null values');
+        }
+
+        $current_value = $this->getValue($xpath);
+        $script = 'if (element.offsetParent !== null)  { element.focus(); return true; } else { return false;  }';
+        if (!$this->runScriptOnXpathElement($xpath, $script)) {
+            throw new DriverException('Element is not visible and can not be focused');
+        }
+
+        // Remove the current value if present (nb an empty contenteditable returns `null` as current value)
+        for ($i = 0; $i < strlen($current_value ?? ''); $i++) {
+            $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 8, 'windowsVirtualKeyCode' => 8];
+            $this->page->send('Input.dispatchKeyEvent', $parameters);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+            $parameters = ['type' => 'rawKeyDown', 'nativeVirtualKeyCode' => 46, 'windowsVirtualKeyCode' => 46];
+            $this->page->send('Input.dispatchKeyEvent', $parameters);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp']);
+        }
+
+        // Then add the new value
+        for ($i = 0; $i < mb_strlen($value); $i++) {
+            $char = mb_substr($value, $i, 1);
+            // For 'normal' chars, the `text` devtools property & the `key` event property are the desired character
+            $text = $key = $char;
+            if ($char === "\n") {
+                // For newlines, the `text` and `key` have special values. This is also the case for other special
+                // (control etc) keys, but newline is the only one that can also be added as part of the string value
+                // of a text field (e.g. a textarea or contenteditable).
+                $text = chr(13);
+                $key = 'Enter';
+            }
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyDown', 'text' => $text, 'key' => $key]);
+            $this->page->send('Input.dispatchKeyEvent', ['type' => 'keyUp', 'key' => $key]);
+        }
+        usleep(5000);
+
+        try {
+            // Remove the focus from the element if the field still has focus, in order to trigger the change event
+            // if the element supports it.
+            //
+            // By doing this instead of simply triggering the change event for the given xpath we ensure that:
+            // a) the change event will not be triggered twice for the same element if it has lost focus in the meantime
+            //    (e.g. if the original input element has custom javascript behaviour that focuses another control
+            //    during data entry, such as an autocomplete / typeahead).
+            // b) the change event will not be triggered for contenteditable elements (which do not natively fire
+            //    `change`).
+            // c) the change event will bubble up the document the same as native change events.
+            //
+            // If the element has lost focus already then there is nothing to do as this will already have caused
+            // the triggering of the change event for that element and/or we assume that clientside code that focused
+            // an alternate element has taken responsibility for triggering events on input / change.
+            $this->runScriptOnXpathElement($xpath, 'if (element === document.activeElement) {element.blur();}');
+        } catch (ElementNotFoundException $e) {
+            // Ignore, sometimes input elements can get removed from a document after they are modified.
+            // For example, editing a title inline and sending a newline character at the end
+            // which submits the inline edit and saves the changes.
+        }
+    }
+
+    /**
+     * @param  $xpath
+     * @param  $value
      * @throws ElementNotFoundException
      * @throws \Exception
      */
     private function setNonTextTypeValue($xpath, $value)
     {
-        $json_value = ctype_digit($value) ? $value : json_encode($value);
-        $text_value = json_encode($value);
+        $fieldType = $this->getElementProperty($xpath, 'type');
+
+        if (!\is_string($value) && in_array($fieldType, ['file', 'radio'])) {
+            throw new DriverException('Only string values can be used for a ' . $fieldType . ' input.');
+        }
+
+        if (\is_bool($value) && in_array($fieldType, ['select', 'select-one', 'submit', 'color', 'date', 'time'])) {
+            throw new DriverException('Boolean values cannot be used for a ' . $fieldType . ' element.');
+        }
+
+        if ($value === [] && in_array($fieldType, ['color', 'date', 'time'])) {
+            throw new DriverException(sprintf('Empty array value cannot be used for a "%s" element.', $fieldType));
+        }
+
+        if (in_array($fieldType, ['submit', 'image', 'button', 'reset'])) {
+            throw new DriverException(sprintf('Cannot set value on "%s" element.', $xpath));
+        }
+
+        if (\is_null($value)) {
+            throw new DriverException('Non-text fields don\'t support null values');
+        }
+
+        $json_value = is_numeric($value) ? $value : json_encode($value);
         $expression = <<<JS
     var expected_value = $json_value;
     var result = 0;
@@ -744,15 +915,14 @@ JS;
             expected_value = [expected_value]
         }
         for (var i = 0; i < element.options.length; i++) {
-            if ((element.multiple && expected_value.includes(element.options[i].value)) || element.options[i].value == expected_value) {
+            if ((element.multiple && expected_value.includes(element.options[i].value))
+                || element.options[i].value == expected_value) {
                 element.options[i].selected = true;
             } else {
                 element.options[i].selected = false;
             }
         }
     } else if (element.tagName == 'INPUT' && element.type == 'file') {
-    } else if (element.tagName == 'INPUT' && (element.type == 'password' || element.type == 'tel' || element.type == 'email')) {
-        element.value = $text_value;
     } else {
         element.value = expected_value
     }
@@ -856,7 +1026,6 @@ JS;
                     'x' => $left,
                     'y' => $top,
                     'button' => 'left',
-                    'timestamp' => time(),
                     'clickCount' => 1,
                 ];
                 $this->page->send('Input.dispatchMouseEvent', $parameters);
@@ -865,7 +1034,6 @@ JS;
                     'x' => $left,
                     'y' => $top,
                     'button' => 'left',
-                    'timestamp' => time(),
                     'clickCount' => 1,
                 ];
                 $this->page->send('Input.dispatchMouseEvent', $parameters);
@@ -877,9 +1045,16 @@ JS;
 
     /**
      * {@inheritdoc}
+     *
+     * @throws DriverException
+     * @throws ElementNotFoundException
      */
     public function attachFile($xpath, $path)
     {
+        if (!file_exists($path)) {
+            throw new DriverException("ChromeDriver was unable to find file '{$path}' to attach it.");
+        }
+
         $script = <<<JS
     if (element == undefined || element.tagName != 'INPUT' || element.type != 'file') {
         throw new Error("Element not found");
@@ -891,15 +1066,17 @@ JS;
 
         $node_id = null;
         $parameters = [
-          'pierce' => $this->document !== 'document',
+            'pierce' => $this->document !== 'document',
         ];
         foreach ($this->page->send('DOM.getFlattenedDocument', $parameters)['nodes'] as $element) {
             if (!empty($element['attributes'])) {
                 $num_attributes = count($element['attributes']);
                 for ($key = 0; $key < $num_attributes; $key += 2) {
                     if ($element['attributes'][$key] == 'name' && $element['attributes'][$key + 1] == $name) {
-                        $this->page->send('DOM.setFileInputFiles',
-                            ['nodeId' => $element['nodeId'], 'files' => (array) $path]);
+                        $this->page->send(
+                            'DOM.setFileInputFiles',
+                            ['nodeId' => $element['nodeId'], 'files' => (array)$path]
+                        );
                         return;
                     }
                 }
@@ -1108,18 +1285,25 @@ JS;
      * @param int $width Set the window width, measured in pixels
      * @param int $height Set the window height, measured in pixels
      */
-    public function setVisibleSize($width, $height) {
-        $this->page->send('Emulation.setDeviceMetricsOverride', [
-            'width'             => $width,
-            'height'            => $height,
-            'deviceScaleFactor' => 0,
-            'mobile'            => false,
-            'fitWindow'         => false,
-        ]);
-        $this->page->send('Emulation.setVisibleSize', [
-            'width'  => $width,
-            'height' => $height,
-        ]);
+    public function setVisibleSize($width, $height)
+    {
+        $this->page->send(
+            'Emulation.setDeviceMetricsOverride',
+            [
+                'width' => $width,
+                'height' => $height,
+                'deviceScaleFactor' => 0,
+                'mobile' => false,
+                'fitWindow' => false,
+            ]
+        );
+        $this->page->send(
+            'Emulation.setVisibleSize',
+            [
+                'width' => $width,
+                'height' => $height,
+            ]
+        );
     }
 
     /**
@@ -1161,32 +1345,36 @@ JS;
      *
      * @return array
      */
-    public function getConsoleMessages() {
+    public function getConsoleMessages()
+    {
         return $this->page->getConsoleMessages();
     }
 
     /**
-     * Clear the sotred console messages.
-     *
-     * @return array
+     * Clear the console messages.
      */
-    public function clearConsoleMessages() {
-        return $this->page->getConsoleMessages();
+    public function clearConsoleMessages()
+    {
+        $this->page->clearConsoleMessages();
     }
 
+    /**
+     * Clear browser cookies.
+     */
     protected function deleteAllCookies()
     {
         $this->page->send('Network.clearBrowserCookies');
     }
 
     /**
-     * @param $xpath
+     * @param  $xpath
      * @return string
      */
     protected function getXpathExpression($xpath)
     {
         $xpath = addslashes($xpath);
         $xpath = str_replace("\n", '\\n', $xpath);
+        // phpcs:ignore Generic.Files.LineLength
         return "var xpath_result = document.evaluate(\"{$xpath}\", {$this->document}, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);";
     }
 
@@ -1196,8 +1384,8 @@ JS;
     }
 
     /**
-     * @param $xpath
-     * @throws ElementNotFoundException
+     * @param  $xpath
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function expectSelectOrRadio($xpath)
     {
@@ -1210,8 +1398,8 @@ JS;
     }
 
     /**
-     * @param $xpath
-     * @throws ElementNotFoundException
+     * @param  $xpath
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function expectCheckbox($xpath)
     {
@@ -1224,9 +1412,9 @@ JS;
     }
 
     /**
-     * @param $xpath
-     * @param $event
-     * @throws ElementNotFoundException
+     * @param  $xpath
+     * @param  $event
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function triggerMouseEvent($xpath, $event)
     {
@@ -1241,9 +1429,9 @@ JS;
     }
 
     /**
-     * @param $xpath
-     * @param $event
-     * @throws ElementNotFoundException
+     * @param  $xpath
+     * @param  $event
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function triggerEvent($xpath, $event)
     {
@@ -1258,11 +1446,11 @@ JS;
     }
 
     /**
-     * @param $xpath
-     * @param $char
-     * @param $modifier
-     * @param $event
-     * @throws ElementNotFoundException
+     * @param  $xpath
+     * @param  $char
+     * @param  $modifier
+     * @param  $event
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      */
     protected function triggerKeyboardEvent($xpath, $char, $modifier, $event)
     {
@@ -1297,11 +1485,11 @@ JS;
     }
 
     /**
-     * @param $xpath
-     * @param $script
+     * @param  $xpath
+     * @param  $script
      * @param null $type
      * @return array
-     * @throws ElementNotFoundException
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
      * @throws \Exception
      */
     protected function runScriptOnXpathElement($xpath, $script, $type = null)
@@ -1326,7 +1514,7 @@ JS;
     }
 
     /**
-     * @param $xpath
+     * @param  $xpath
      * @return array
      */
     protected function getCoordinatesForXpath($xpath)
@@ -1342,34 +1530,44 @@ JS;
         return [ceil($left), ceil($top), floor($width), floor($height)];
     }
 
-  /**
-   * @param string $xpath
-   * @return array
-   * @throws ElementNotFoundException
-   */
-  public function getEventListenersForXpath($xpath) {
-    $xpath = addslashes($xpath);
-    $xpath = str_replace("\n", '\\n', $xpath);
-    // Query the element first to obtain the Remote.ObjectID which is required
-    // parameter when obtaining the list of registered event listeners.
-    $script = <<<JS
-        document.evaluate("{$xpath}", {$this->document}, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    /**
+     * @param string $xpath
+     * @return array
+     * @throws \Behat\Mink\Exception\ElementNotFoundException
+     */
+    public function getEventListenersForXpath($xpath)
+    {
+        $xpath = addslashes($xpath);
+        $xpath = str_replace("\n", '\\n', $xpath);
+        // Query the element first to obtain the Remote.ObjectID which is required
+        // parameter when obtaining the list of registered event listeners.
+        $script = <<<JS
+        document.evaluate(
+            "{$xpath}",
+            {$this->document},
+            null,
+            XPathResult.FIRST_ORDERED_NODE_TYPE,
+            null
+        ).singleNodeValue;
 JS;
-    $result = $this->runScript($script)['result'];
-    if ($result['type'] != 'object' || $result['subtype'] != 'node') {
-      throw new ElementNotFoundException($this, NULL, 'xpath', $xpath);
+        $result = $this->runScript($script)['result'];
+        if ($result['type'] != 'object' || $result['subtype'] != 'node') {
+            throw new ElementNotFoundException($this, null, 'xpath', $xpath);
+        }
+
+        // Get list of event listeners registered.
+        $result = $this->page->send(
+            'DOMDebugger.getEventListeners',
+            [
+                'objectId' => $result['objectId'],
+            ]
+        );
+
+        return $result['listeners'];
     }
 
-    // Get list of event listeners registered.
-    $result = $this->page->send('DOMDebugger.getEventListeners', [
-      'objectId' => $result['objectId'],
-    ]);
-
-    return $result['listeners'];
-  }
-
     /**
-     * @param $script
+     * @param  $script
      * @return null
      */
     protected function runScript($script)
@@ -1379,7 +1577,7 @@ JS;
     }
 
     /**
-     * @param $result
+     * @param  $result
      * @return array
      */
     protected function fetchObjectProperties($result)
@@ -1390,18 +1588,22 @@ JS;
         foreach ($properties as $property) {
             if ($property['name'] !== '__proto__' && $property['name'] !== 'length') {
                 $value = $property['value'];
-                if (!empty($value['type']) && $value['type'] == 'object' &&
-                    !empty($value['className']) &&
-                    in_array($value['className'], ['Array', 'Object'])
+                if (
+                    !empty($value['type']) && $value['type'] == 'object'
+                    && !empty($value['className'])
+                    && in_array($value['className'], ['Array', 'Object'])
                 ) {
                     $return[$property['name']] = $this->fetchObjectProperties($value);
                 } else {
-                    if ($value['type'] === 'number' && !array_key_exists('value', $value) &&
-                        array_key_exists('unserializableValue', $value) && $value['unserializableValue'] === '-0') {
+                    if (
+                        $value['type'] === 'number' && !array_key_exists('value', $value)
+                        && array_key_exists('unserializableValue', $value) && $value['unserializableValue'] === '-0'
+                    ) {
                         $return[$property['name']] = 0;
-                    }
-                    elseif ($value['type'] === 'function' && !array_key_exists('value', $value) &&
-                        array_key_exists('description', $value)) {
+                    } elseif (
+                        $value['type'] === 'function' && !array_key_exists('value', $value)
+                        && array_key_exists('description', $value)
+                    ) {
                         $return[$property['name']] = $value['description'];
                     } elseif (!array_key_exists('value', $value)) {
                         throw new DriverException('Property value not set');
@@ -1415,8 +1617,8 @@ JS;
     }
 
     /**
-     * @param $window_id
-     * @throws DriverException
+     * @param  $window_id
+     * @throws \Behat\Mink\Exception\DriverException
      */
     protected function connectToWindow($window_id)
     {
@@ -1429,7 +1631,10 @@ JS;
 
         foreach ($windows as $window) {
             if ($window['id'] == $window_id) {
-                $this->page = new ChromePage($window['webSocketDebuggerUrl'], isset($this->options['socketTimeout']) ? $this->options['socketTimeout'] : 10);
+                $this->page = new ChromePage(
+                    $window['webSocketDebuggerUrl'],
+                    $this->options['socketTimeout'] ?? self::$socketTimeoutDefault
+                );
                 $this->page->connect();
                 $this->current_window = $window_id;
                 $this->document = 'document';
@@ -1457,24 +1662,39 @@ JS;
      * For more information see https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-printToPDF
      *
      * @param string $filename
-     * @param bool   $landscape
-     * @param bool   $displayHeaderFooter
-     * @param bool   $printBackground
-     * @param int    $scale
-     * @param float  $paperWidth
-     * @param float  $paperHeight
-     * @param float  $marginTop
-     * @param float  $marginBottom
-     * @param float  $marginLeft
-     * @param float  $marginRight
+     * @param bool $landscape
+     * @param bool $displayHeaderFooter
+     * @param bool $printBackground
+     * @param int $scale
+     * @param float $paperWidth
+     * @param float $paperHeight
+     * @param float $marginTop
+     * @param float $marginBottom
+     * @param float $marginLeft
+     * @param float $marginRight
      * @param string $pageRanges
-     * @param bool   $ignoreInvalidPageRanges
+     * @param bool $ignoreInvalidPageRanges
      * @param string $headerTemplate
      * @param string $footerTemplate
      * @throws \Exception
      */
-    public function printToPDF($filename, $landscape = false, $displayHeaderFooter = false, $printBackground = false, $scale = 1, $paperWidth = 8.5, $paperHeight = 11.0, $marginTop = 1.0, $marginBottom = 1.0, $marginLeft = 1.0, $marginRight = 1.0, $pageRanges = '', $ignoreInvalidPageRanges = false, $headerTemplate = '', $footerTemplate = '')
-    {
+    public function printToPDF(
+        $filename,
+        $landscape = false,
+        $displayHeaderFooter = false,
+        $printBackground = false,
+        $scale = 1,
+        $paperWidth = 8.5,
+        $paperHeight = 11.0,
+        $marginTop = 1.0,
+        $marginBottom = 1.0,
+        $marginLeft = 1.0,
+        $marginRight = 1.0,
+        $pageRanges = '',
+        $ignoreInvalidPageRanges = false,
+        $headerTemplate = '',
+        $footerTemplate = ''
+    ) {
         if (false === $this->browser->isHeadless()) {
             throw new \RuntimeException('Page.printToPDF is only available in headless mode.');
         }

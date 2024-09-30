@@ -3,79 +3,120 @@ variables:
   CHROME_DEBUG_URL: http://localhost:9222
 
 stages:
+  - lint
   - test
+  - report
 
-.test_template: &test_template
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+.test_template:
   stage: test
-  tags: [docker]
   retry: 2
-  script:
+  services:
+    - name: zenika/alpine-chrome:latest
+      alias: chrome
+      command: [
+        "--remote-debugging-address=0.0.0.0",
+        "--remote-debugging-port=9222",
+        "--no-sandbox",
+        "--use-gl=swiftshader",
+        "--disable-software-rasterizer",
+        "--disable-dev-shm-usage"
+      ]
+  variables:
+    CHROME_DEBUG_URL: http://chrome:9222
+    CHROME_WAIT_TIME: 3
+    FF_NETWORK_PER_BUILD: 1
+  before_script:
     - bin/wait-for-chrome.sh
+    - php --version
+    - >
+      curl --silent --show-error --header "Host: localhost" http://chrome:9222/json/version | tee chrome-version.json
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
-    - vendor/bin/phpunit --colors=always
+    - cp .gitlab-ci/phpunit.xml.dist phpunit.xml
+  script:
+    - vendor/bin/phpunit --colors=always --log-junit junit.xml
+  needs: []
+  artifacts:
+    name: "artifacts-${CI_JOB_NAME}-${CI_COMMIT_SHA}"
+    paths:
+      - junit.xml
+    reports:
+      junit:
+        - junit.xml
+    when: always
 
-PHP 5.6:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:5.6
+Changelog:
+  image: composer
+  stage: lint
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  allow_failure: true
+  script:
+    - git fetch
+    - FILES_CHANGED=$(git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA...HEAD)
+    - |+
+      for i in $FILES_CHANGED
+      do
+        if [[ "$i" == "CHANGELOG.md" ]]
+        then
+          exit 0
+        fi
+      done
+      echo -e "⚠️\e[93m CHANGELOG.md is not updated in this MR, please add a CHANGELOG entry"
+      echo -e "⚠️\e[93m (or an explanatory comment in MR if it's not CHANGELOG-worthy)"
+      exit 1
 
-PHP 7.0:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.0
+Makefile:
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
+  stage: lint
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  script:
+    - make --dry-run test_make
 
-PHP 7.1:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.1
+GrumPHP:
+  image: composer
+  stage: lint
+  script:
+    - composer require --dev --prefer-dist --ansi --no-progress --sort-packages phpro/grumphp-shim ergebnis/composer-normalize enlightn/security-checker
+    - vendor/bin/grumphp run -n
 
-PHP 7.2:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.2
+PHP 7.4:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:7.4
 
-PHP 7.3:
-  <<: *test_template
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
+PHP 8.0:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
 
-Chromium:
-  <<: *test_template
+PHP 8.1:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.1
+
+PHP 8.2:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.2
+
+# This job collects coverage also.
+Report PHPUnit coverage:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
+  stage: report
   variables:
-    CHROME_BUILD: chromium
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
-
-Chrome unstable:
-  <<: *test_template
-  variables:
-    CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
-
-Chrome beta:
-  <<: *test_template
-  variables:
-    CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
-
-Headed:
-  <<: *test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
-
-Headed chrome unstable:
-  <<: *test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: google-chrome-unstable
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
-
-Headed chrome beta:
-  <<: *test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: google-chrome-beta
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
-
-Headed chromium:
-  <<: *test_template
-  variables:
-    AUTOSTART_XVFB: "true"
-    CHROME_BUILD: chromium
-  image: registry.gitlab.com/dmore/docker-chrome-headless:7.3
+    XDEBUG_MODE: coverage
+  script:
+    - vendor/bin/phpunit --colors=never --log-junit junit.xml --coverage-cobertura phpunit-coverage.xml --coverage-text
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: phpunit-coverage.xml
+  coverage: '/^\s*Lines:\s*\d+.\d+\%/'

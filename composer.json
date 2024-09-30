@@ -1,20 +1,39 @@
 {
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/adorin/driver-testsuite.git"
-        }
-    ],
-    "name": "dmore/chrome-mink-driver",
+    "name": "ingenerator/chrome-mink-driver",
     "description": "Mink driver for controlling chrome without selenium",
-    "type": "library",
     "license": "MIT",
+    "type": "library",
     "authors": [
         {
             "name": "Dorian More",
             "email": "doriancmore@gmail.com"
+        },
+        {
+          "name": "Craig Gosman",
+          "email": "craig@ingenerator.com"
         }
     ],
+    "homepage": "https://gitlab.com/behat-chrome/chrome-mink-driver",
+    "support": {
+        "issues": "https://gitlab.com/behat-chrome/chrome-mink-driver/-/issues"
+    },
+    "replace": {
+      "dmore/chrome-mink-driver": "*"
+    },
+    "require": {
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "behat/mink": "^1.9",
+        "phrity/websocket": "^1.7.0"
+    },
+    "require-dev": {
+        "mink/driver-testsuite": "dev-master",
+        "phpunit/phpunit": "^8.5.22 || ^9.5.11",
+        "squizlabs/php_codesniffer": "^3.5"
+    },
+    "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
             "DMore\\ChromeDriver\\": "src/"
@@ -25,20 +44,13 @@
             "DMore\\ChromeDriverTests\\": "tests/"
         }
     },
-    "minimum-stability": "stable",
-    "require-dev": {
-        "phpunit/phpunit": "^5.0.0",
-        "mink/driver-testsuite": "dev-master"
-    },
-    "require": {
-        "ext-curl": "*",
-        "ext-json": "*",
-        "textalk/websocket": "^1.2.0",
-        "behat/mink": "^1.7"
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "2.0.x-dev"
+    "config": {
+        "allow-plugins": {
+            "ergebnis/composer-normalize": true,
+            "phpro/grumphp-shim": true
         }
+    },
+    "scripts": {
+        "coverage": "XDEBUG_MODE=coverage phpunit --log-junit phpunit-report.xml --coverage-cobertura phpunit-coverage.xml --coverage-text --colors=never"
     }
 }

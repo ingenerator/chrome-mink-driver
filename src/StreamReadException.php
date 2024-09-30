@@ -1,20 +1,34 @@
 <?php
+
 namespace DMore\ChromeDriver;
 
+/**
+ *
+ * @deprecated This exception is no longer used or thrown by this library.
+ */
 class StreamReadException extends \Exception
 {
-    /** @var bool */
+    /**
+     * @var bool
+     */
     private $eof;
-    /** @var bool */
+    /**
+     * @var bool
+     */
     private $timed_out;
-    /** @var bool */
+    /**
+     * @var bool
+     */
     private $blocked;
 
-    public function __construct($eof, $timed_out, $blocked)
+    public function __construct($message, $code, $state = [], \Exception $previous = null)
     {
-        $this->eof = $eof;
-        $this->timed_out = $timed_out;
-        $this->blocked = $blocked;
+        $this->message = $message;
+        $this->eof = $state['eof'] ?? null;
+        $this->timed_out = $state['timed_out'] ?? null;
+        $this->blocked = $state['blocked'] ?? null;
+
+        parent::__construct($message, 0, $previous);
     }
 
     /**
