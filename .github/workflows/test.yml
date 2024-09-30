@@ -5,6 +5,7 @@ on:
     branches:
       # Only mainline branches, features etc are covered on the pull_request trigger
       - 'ingenerator-main'
+      - 'ingen-main-2'
   pull_request:
 
 jobs:
