@@ -3,6 +3,10 @@ Changelog
 
 ## Unreleased
 
+## 2.9.4.2 (CUSTOM INGENERATOR RELEASE) (2024-10-17)
+
+* Some minor connection enhancements #19
+
 ## 2.9.4.1 (CUSTOM INGENERATOR RELEASE) (2024-09-30)
 
 * Fully resets our fork back to the unreleased version of upstream, plus adds PHP8.3 support. The majority of our 
