@@ -1,5 +1,5 @@
 {
-    "name": "dmore/chrome-mink-driver",
+    "name": "ingenerator/chrome-mink-driver",
     "description": "Mink driver for controlling chrome without selenium",
     "license": "MIT",
     "type": "library",
@@ -7,13 +7,21 @@
         {
             "name": "Dorian More",
             "email": "doriancmore@gmail.com"
+        },
+        {
+          "name": "Craig Gosman",
+          "email": "craig@ingenerator.com"
         }
     ],
     "homepage": "https://gitlab.com/behat-chrome/chrome-mink-driver",
     "support": {
         "issues": "https://gitlab.com/behat-chrome/chrome-mink-driver/-/issues"
     },
+    "replace": {
+      "dmore/chrome-mink-driver": "*"
+    },
     "require": {
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-mbstring": "*",

@@ -144,7 +144,6 @@ class ChromeDriver extends CoreDriver
         }
 
         if (isset($this->options['validateCertificate']) && $this->options['validateCertificate'] === false) {
-            $this->page->send('Security.enable');
             $this->page->send('Security.setIgnoreCertificateErrors', ['ignore' => true]);
         }
     }
@@ -239,8 +238,10 @@ class ChromeDriver extends CoreDriver
         }
         $this->switchToWindow($this->main_window);
         $this->page->reset();
-        $this->request_headers = [];
-        $this->sendRequestHeaders();
+        if ($this->request_headers !== []) {
+            $this->request_headers = [];
+            $this->sendRequestHeaders();
+        }
     }
 
     /**
@@ -1741,5 +1742,16 @@ JS;
         }
 
         file_put_contents($filename, $imageData);
+    }
+
+    public function clearLocalStorageForOrigin(string $origin): void
+    {
+        $this->page->send(
+            'Storage.clearDataForOrigin',
+            [
+                'origin' => $origin,
+                'storageTypes' => 'local_storage',
+            ]
+        );
     }
 }
