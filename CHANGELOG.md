@@ -6,6 +6,7 @@ Changelog
 ## 2.9.4.2 (CUSTOM INGENERATOR RELEASE) (2024-10-17)
 
 * Some minor connection enhancements #19
+* Support flushing localstorage for domain #22
 
 ## 2.9.4.1 (CUSTOM INGENERATOR RELEASE) (2024-09-30)
 
