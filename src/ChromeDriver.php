@@ -866,6 +866,10 @@ JS;
             throw new DriverException('Only string values can be used for a ' . $fieldType . ' input.');
         }
 
+        if (!\is_bool($value) && in_array($fieldType, ['checkbox'])) {
+            throw new DriverException('Boolean values must be used for a ' . $fieldType . ' element.');
+        }
+
         if (\is_bool($value) && in_array($fieldType, ['select', 'select-one', 'submit', 'color', 'date', 'time'])) {
             throw new DriverException('Boolean values cannot be used for a ' . $fieldType . ' element.');
         }
