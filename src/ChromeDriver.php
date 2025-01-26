@@ -340,38 +340,6 @@ class ChromeDriver extends CoreDriver
                     return;
                 }
             }
-            try {
-                $this->runScript("window.latest_popup = window.open('', '{$name}');");
-                $condition = "window.latest_popup.location.href != 'about:blank';";
-                $this->wait(2000, $condition);
-                $script = "[window.latest_popup.document.title, window.latest_popup.location.href]";
-                list($title, $href) = $this->evaluateScript($script);
-
-                foreach ($this->getWindowNames() as $id) {
-                    $info = $this->page->send('Target.getTargetInfo', ['targetId' => $id])['targetInfo'];
-                    if ($info['type'] === 'page' && $info['url'] == $href && $info['title'] == $title) {
-                        $this->switchToWindow($id);
-                        return;
-                    }
-                }
-            } catch (\Exception $e) {
-            }
-            try {
-                // Last effort, connect to each window and compare its window name.
-                $currentWindow = $this->getCurrentWindow();
-                foreach ($this->page->getTabs() as $tab) {
-                    $this->connectToWindow($tab['targetId']);
-                    $windowName = $this->evaluateScript('window.name');
-
-                    if ($windowName === $name) {
-                        return;
-                    }
-                }
-                // Failed to find it, try to reconnect to the original window.
-                $this->connectToWindow($currentWindow);
-            } catch (\Exception $e) {
-            }
-
             throw new DriverException("Couldn't find window {$name}");
         }
     }
