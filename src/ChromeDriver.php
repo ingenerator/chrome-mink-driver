@@ -100,7 +100,7 @@ class ChromeDriver extends CoreDriver
      */
     public function __construct(
         $api_url = 'http://localhost:9222',
-        HttpClient $http_client = null,
+        ?HttpClient $http_client = null,
         $base_url = null,
         $options = []
     ) {

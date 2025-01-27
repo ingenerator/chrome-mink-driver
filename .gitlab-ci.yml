@@ -88,14 +88,6 @@ GrumPHP:
     - composer require --dev --prefer-dist --ansi --no-progress --sort-packages phpro/grumphp-shim ergebnis/composer-normalize enlightn/security-checker
     - vendor/bin/grumphp run -n
 
-PHP 7.4:
-  extends: .test_template
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:7.4
-
-PHP 8.0:
-  extends: .test_template
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
-
 PHP 8.1:
   extends: .test_template
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.1
@@ -103,6 +95,10 @@ PHP 8.1:
 PHP 8.2:
   extends: .test_template
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.2
+
+PHP 8.3:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.3
 
 # This job collects coverage also.
 Report PHPUnit coverage:
