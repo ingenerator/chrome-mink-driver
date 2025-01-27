@@ -100,10 +100,6 @@ PHP 8.3:
   extends: .test_template
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.3
 
-PHP 8.4:
-  extends: .test_template
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.4
-
 # This job collects coverage also.
 Report PHPUnit coverage:
   extends: .test_template
