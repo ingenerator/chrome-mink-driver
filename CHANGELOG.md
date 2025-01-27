@@ -7,6 +7,7 @@ Changelog
 * Fix returned value of `isTextTypeInput` (#149)
 * Session reset should close non-main windows (#152, !178)
 * Remove fallback behaviours for switching to windows that don't exist (#158, !193)
+* Tests run against PHP versions 8.1 to 8.4 (#153, !195)
 
 ## 2.9.3
 
