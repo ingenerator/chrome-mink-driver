@@ -53,7 +53,7 @@ workflow:
     when: always
 
 Changelog:
-  image: composer
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
   stage: lint
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -82,7 +82,7 @@ Makefile:
     - make --dry-run test_make
 
 GrumPHP:
-  image: composer
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
   stage: lint
   script:
     - composer require --dev --prefer-dist --ansi --no-progress --sort-packages phpro/grumphp-shim ergebnis/composer-normalize enlightn/security-checker
