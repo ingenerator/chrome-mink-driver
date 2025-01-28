@@ -229,13 +229,11 @@ class ChromeDriver extends CoreDriver
         $this->ensureStarted();
         $this->document = 'document';
         $this->deleteAllCookies();
-        foreach ($this->getWindowNames() as $windowId) {
-            foreach ($this->getWindowNames() as $key => $window_id) {
-                if ($window_id === $this->main_window) {
-                    continue;
-                }
-                $this->http_client->get($this->api_url . '/json/close/' . $window_id);
+        foreach ($this->getWindowNames() as $window_id) {
+            if ($window_id === $this->main_window) {
+                continue;
             }
+            $this->http_client->get($this->api_url . '/json/close/' . $window_id);
         }
         $this->switchToWindow($this->main_window);
         $this->page->reset();
