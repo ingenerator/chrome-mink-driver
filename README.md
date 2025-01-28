@@ -7,13 +7,13 @@ It communicates directly with Google Chrome over HTTP and WebSockets, which allo
 [![Gitlab CI pipeline](https://gitlab.com/behat-chrome/chrome-mink-driver/badges/main/pipeline.svg)](https://gitlab.com/behat-chrome/chrome-mink-driver/badges/main/pipeline.svg)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/6489/badge)](https://bestpractices.coreinfrastructure.org/projects/6489)
 
-## Installation:
+## Installation
 
 ```bash
 composer require dmore/chrome-mink-driver
 ```
 
-## Requirements:
+## Requirements
 
 * Google Chrome or Chromium running with remote debugging.
 
@@ -49,7 +49,7 @@ The project has test coverage, which you can execute using the commands below.
 
 Test execution requires a webserver configured to serve fixtures from [minkphp/driver-testsuite](https://github.com/minkphp/driver-testsuite/), which is provided by a docker image from the related [behat-chrome/docker-chrome-headless](https://gitlab.com/behat-chrome/docker-chrome-headless/) project.  Tests executed are both [tests specific to this driver](https://gitlab.com/behat-chrome/chrome-mink-driver/-/tree/main/tests) and the more comprehensive test suite from [mink/driver-testsuite](https://github.com/minkphp/driver-testsuite/), which is the common testsuite to ensure consistency across Mink driver implementations.
 
-### Using `make`
+### Using `make` to execute commands in Docker
 
 | command | purpose |
 |--|--|
@@ -58,17 +58,22 @@ Test execution requires a webserver configured to serve fixtures from [minkphp/d
 | `make phpcbf` | Tidy code using `phpcbf` |
 | `make phpcs` | Check coding standards with `phpcs` |
 
-### Without `make`
+### Docker environment to run commands
 
 To perform these tasks without `make`, you can execute the same commands as above in a container. To run the tests using `phpunit`:
 ```text
 docker run --rm -it -v .:/code -e DOCROOT=/code/vendor/mink/driver-testsuite/web-fixtures registry.gitlab.com/behat-chrome/docker-chrome-headless bash
 ```
+
 then, in the container shell:
 ```text
 composer install
 vendor/bin/phpunit
 ```
+
+### Executing Gitlab CI pipeline locally
+
+You can also run the Gitlab CI pipeline in your local environment, using [firecow/gitlab-ci-local](https://github.com/firecow/gitlab-ci-local)!
 
 ## Versioning & releases
 
