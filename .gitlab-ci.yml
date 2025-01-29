@@ -16,7 +16,6 @@ workflow:
 
 .test_template:
   stage: test
-  retry: 2
   services:
     - name: zenika/alpine-chrome:latest
       alias: chrome
