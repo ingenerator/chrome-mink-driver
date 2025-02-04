@@ -2,7 +2,7 @@
 
 namespace DMore\ChromeDriverTests;
 
-use DMore\ChromeDriver\ChromeBrowser as Browser;
+use DMore\ChromeDriver\ChromeBrowser;
 use DMore\ChromeDriver\HttpClient;
 use PHPUnit\Framework\TestCase;
 
@@ -14,17 +14,16 @@ class ChromeBrowserTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $client->expects($this->any())
-            ->method('get')
+        $client->method('get')
             ->willReturn('Error Happened!');
 
         $this->expectException(\RuntimeException::class);
         // Test that chromium response is included in exception message.
         $this->expectExceptionMessageMatches('/Error Happened!/');
 
-        $browser = new Browser('http://localhost:9222');
+        $browser = new ChromeBrowser('https://bad-default-url');
         $browser->setHttpClient($client);
-        $browser->setHttpUri('http://localhost:9222');
+        $browser->setHttpUri(ChromeDriverConfig::getInstance()->getChromeUrl());
         $browser->start();
     }
 }

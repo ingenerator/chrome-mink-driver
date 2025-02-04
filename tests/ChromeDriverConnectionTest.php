@@ -2,9 +2,7 @@
 
 namespace DMore\ChromeDriverTests;
 
-use DMore\ChromeDriver\ChromeBrowser;
 use DMore\ChromeDriver\ChromeDriver;
-use DMore\ChromeDriver\HttpClient;
 use WebSocket\TimeoutException;
 
 /**
@@ -34,10 +32,9 @@ class ChromeDriverConnectionTest extends ChromeDriverTestBase
     public function testTimeoutExceptionIfResponseBlocked()
     {
         // We don't want to wait the default 10s to time out.
-        $options = [
-            'socketTimeout' => 1,
-        ];
-        $this->driver = new ChromeDriver('http://localhost:9222', null, 'about:blank', $options);
+        $options = ['socketTimeout' => 1];
+        $chromeUrl = ChromeDriverConfig::getInstance()->getChromeUrl();
+        $this->driver = new ChromeDriver($chromeUrl, null, 'about:blank', $options);
         $script = "confirm('Is the browser blocked? (yes, it is)');";
         $this->driver->visit('about:blank');
         $this->driver->evaluateScript($script);
@@ -45,28 +42,5 @@ class ChromeDriverConnectionTest extends ChromeDriverTestBase
         // Content read is necessary to trigger timeout.
         $this->expectException(TimeoutException::class);
         $this->driver->getContent();
-    }
-
-    /**
-     *
-     */
-    public function testRuntimeExceptionIfClientConnectionFails()
-    {
-        $client = $this->getMockBuilder(HttpClient::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $client->expects($this->any())
-            ->method('get')
-            ->willReturn('Error Happened!');
-
-        $this->expectException(\RuntimeException::class);
-        // Test that chromium response is included in exception message.
-        $this->expectExceptionMessageMatches('/Error Happened!/');
-
-        $browser = new ChromeBrowser('http://localhost:9222');
-        $browser->setHttpClient($client);
-        $browser->setHttpUri('http://localhost:9222');
-        $browser->start();
     }
 }
