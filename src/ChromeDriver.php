@@ -195,6 +195,9 @@ class ChromeDriver extends CoreDriver
                 }
                 $this->http_client->get($this->api_url . '/json/close/' . $window_id);
             }
+            if ($this->page) {
+                $this->page->close();
+            }
             $this->browser->close();
         } catch (ConnectionException $exception) {
         } catch (DriverException $exception) {
