@@ -38,7 +38,6 @@ workflow:
       curl --silent --show-error --header "Host: localhost" http://chrome:9222/json/version | tee chrome-version.json
     - composer install -o --prefer-dist --ansi --no-progress
     - test -z "${AUTOSTART_XVFB}" || sed -i '27s#^#//#' vendor/mink/driver-testsuite/tests/Basic/BasicAuthTest.php
-    - cp .gitlab-ci/phpunit.xml.dist phpunit.xml
   script:
     - vendor/bin/phpunit --colors=always --log-junit junit.xml
   needs: []

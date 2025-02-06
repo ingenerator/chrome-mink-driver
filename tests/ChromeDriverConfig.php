@@ -16,8 +16,14 @@ class ChromeDriverConfig extends AbstractConfig
 
     public function getChromeUrl(): string
     {
-        return $_SERVER['CHROME_URL']
-            ?? throw new \RuntimeException('The CHROME_URL server/env variable must be set');
+        return getenv('CHROME_URL')
+            ?: throw new \RuntimeException('The CHROME_URL environment variable must be set');
+    }
+
+    public function getWebFixturesUrl()
+    {
+        return getenv('WEB_FIXTURES_HOST')
+            ?: throw new \RuntimeException('The WEB_FIXTURES_HOST environment variable must be set');
     }
 
     /**
@@ -25,10 +31,7 @@ class ChromeDriverConfig extends AbstractConfig
      */
     public function createDriver(): ChromeDriver
     {
-        $webFixturesHost = $_SERVER['WEB_FIXTURES_HOST']
-            ?? throw new \RuntimeException('The WEB_FIXTURES_HOST server/env variable must be set');
-
-        return new ChromeDriver($this->getChromeUrl(), null, $webFixturesHost, ['socketTimeout' => 1]);
+        return new ChromeDriver($this->getChromeUrl(), null, $this->getWebFixturesUrl(), ['socketTimeout' => 1]);
     }
 
     /**
