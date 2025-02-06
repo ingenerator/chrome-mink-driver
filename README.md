@@ -77,17 +77,32 @@ test or at least maintain existing coverage.
 | `make phpcbf` | Tidy code using `phpcbf` |
 | `make phpcs` | Check coding standards with `phpcs` |
 
-### Docker environment to run commands
+### Docker compose environment to run tests
 
-To perform these tasks without `make`, you can execute the same commands as above in a container. To run the tests using `phpunit`:
-```text
-docker run --rm -it -v .:/code -e DOCROOT=/code/vendor/mink/driver-testsuite/web-fixtures registry.gitlab.com/behat-chrome/docker-chrome-headless bash
+You can also use docker compose to provision the required stack for local testing. This provides a web fixtures host,
+a headless chrome instance, and a PHP container to run your tests.
+
+This assumes you have already run `composer install` to fetch dependencies.
+
+To run the full suite of unit tests:
+
+```shell
+docker compose run --rm --entrypoint /workspace/vendor/bin/phpunit test_runner
 ```
 
-then, in the container shell:
-```text
-composer install
+You can also open a shell to the test runner for interactive testing / iterating on a feature: 
+
+```shell
+docker compose run --rm test_runner
+# Then in the shell that opens
 vendor/bin/phpunit
+```
+
+To test on a different PHP version, specify the PHP_VERSION environment variable (you may need
+to reinstall dependencies):
+
+```shell
+PHP_VERSION=8.1 docker compose run --rm --entrypoint /workspace/vendor/bin/phpunit test_runner
 ```
 
 ### Executing Gitlab CI pipeline locally
