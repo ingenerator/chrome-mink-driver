@@ -2,7 +2,7 @@
 
 printf 'Waiting for chrome to start...'
 for i in {0..240}; do
-    if curl -sS ${CHROME_DEBUG_URL} &> /dev/null ; then
+    if curl -sS ${CHROME_URL} &> /dev/null ; then
         break
     fi
     printf .

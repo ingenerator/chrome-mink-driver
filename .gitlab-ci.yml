@@ -1,6 +1,6 @@
 variables:
   DOCROOT: "${CI_PROJECT_DIR}/vendor/mink/driver-testsuite/web-fixtures"
-  CHROME_DEBUG_URL: http://localhost:9222
+  CHROME_URL: http://localhost:9222
 
 stages:
   - lint
@@ -28,7 +28,7 @@ workflow:
         "--disable-dev-shm-usage"
       ]
   variables:
-    CHROME_DEBUG_URL: http://chrome:9222
+    CHROME_URL: http://chrome:9222
     CHROME_WAIT_TIME: 3
     FF_NETWORK_PER_BUILD: 1
   before_script:
