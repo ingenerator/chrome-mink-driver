@@ -189,12 +189,6 @@ class ChromeDriver extends CoreDriver
     {
         try {
             $this->reset();
-            foreach ($this->getWindowNames() as $key => $window_id) {
-                if ($key == 0) {
-                    continue;
-                }
-                $this->http_client->get($this->api_url . '/json/close/' . $window_id);
-            }
             if ($this->page) {
                 $this->page->close();
             }
