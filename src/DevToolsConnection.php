@@ -78,11 +78,12 @@ abstract class DevToolsConnection
     public function connect($url = null): void
     {
         $url = $url == null ? $this->url : $url;
-        $options = ['fragment_size' => 2000000]; // Chrome closes the connection if a message is sent in fragments
+        $this->client = new Client($url);
+        // Chrome closes the connection if a message is sent in fragments
+        $this->client->setFrameSize(2000000);
         if (is_numeric($this->socket_timeout) && $this->socket_timeout > 0) {
-            $options['timeout'] = (int)$this->socket_timeout;
+            $this->client->setTimeout($this->socket_timeout);
         }
-        $this->client = new Client($url, $options);
     }
 
     /**
