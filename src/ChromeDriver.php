@@ -1812,4 +1812,15 @@ JS;
 
         file_put_contents($filename, $imageData);
     }
+
+    public function clearLocalStorageForOrigin(string $origin): void
+    {
+        $this->page->send(
+            'Storage.clearDataForOrigin',
+            [
+                'origin' => $origin,
+                'storageTypes' => 'local_storage',
+            ]
+        );
+    }
 }
