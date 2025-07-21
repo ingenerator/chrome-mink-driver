@@ -145,7 +145,6 @@ class ChromeDriver extends CoreDriver
         }
 
         if (isset($this->options['validateCertificate']) && $this->options['validateCertificate'] === false) {
-            $this->page->send('Security.enable');
             $this->page->send('Security.setIgnoreCertificateErrors', ['ignore' => true]);
         }
     }
@@ -189,12 +188,6 @@ class ChromeDriver extends CoreDriver
     {
         try {
             $this->reset();
-            foreach ($this->getWindowNames() as $key => $window_id) {
-                if ($key == 0) {
-                    continue;
-                }
-                $this->http_client->get($this->api_url . '/json/close/' . $window_id);
-            }
             if ($this->page) {
                 $this->page->close();
             }
@@ -233,16 +226,67 @@ class ChromeDriver extends CoreDriver
         $this->ensureStarted();
         $this->document = 'document';
         $this->deleteAllCookies();
-        foreach ($this->getWindowNames() as $window_id) {
-            if ($window_id === $this->main_window) {
-                continue;
-            }
-            $this->http_client->get($this->api_url . '/json/close/' . $window_id);
-        }
+        $this->closeWindows(
+            array_filter(
+                $this->getWindowNames(),
+                fn ($window_id) => $window_id !== $this->main_window
+            )
+        );
         $this->switchToWindow($this->main_window);
         $this->page->reset();
-        $this->request_headers = [];
-        $this->sendRequestHeaders();
+        if ($this->request_headers !== []) {
+            $this->request_headers = [];
+            $this->sendRequestHeaders();
+        }
+    }
+
+    /**
+     * @param list<string> $window_ids
+     *
+     * @throws DriverException if windows do not close within the timeout
+     */
+    private function closeWindows(array $window_ids): void
+    {
+        if ($window_ids === []) {
+            // Nothing to do
+            return;
+        }
+
+        foreach ($window_ids as $id) {
+            $this->http_client->get($this->api_url . '/json/close/' . $id);
+        }
+
+        // Windows close asynchronously and will still be visible in `getWindowNames()` for a moment
+        // after the JSON close command is sent.
+        // Using the JSON API here increases the chance that `->reset()` will succeed even if the
+        // devtools protocol has crashed or is hanging (e.g. if a page has opened a JS dialog, or
+        // failed to load within the timeout).
+
+        // In general, this should take milliseconds, but allow a few seconds for transient slowness.
+        // It is unlikely that this timeout needs to be customised.
+        $timeout = time() + 3;
+
+        while (true) {
+            $open_window_ids = array_map(
+                fn ($w) => $w->id,
+                json_decode($this->http_client->get($this->api_url . '/json/list'))
+            );
+
+            $pending = array_intersect($open_window_ids, $window_ids);
+
+            if ($pending === []) {
+                // All the windows we want to close are now closed
+                return;
+            }
+
+            if (time() > $timeout) {
+                throw new DriverException(
+                    'Timed out waiting to close windows: ' . implode(', ', $pending)
+                );
+            }
+
+            usleep(5000);
+        }
     }
 
     /**
