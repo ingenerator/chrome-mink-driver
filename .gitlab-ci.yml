@@ -16,7 +16,6 @@ workflow:
 
 .test_template:
   stage: test
-  retry: 2
   services:
     - name: zenika/alpine-chrome:latest
       alias: chrome
@@ -53,7 +52,7 @@ workflow:
     when: always
 
 Changelog:
-  image: composer
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
   stage: lint
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -82,19 +81,11 @@ Makefile:
     - make --dry-run test_make
 
 GrumPHP:
-  image: composer
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless
   stage: lint
   script:
     - composer require --dev --prefer-dist --ansi --no-progress --sort-packages phpro/grumphp-shim ergebnis/composer-normalize enlightn/security-checker
     - vendor/bin/grumphp run -n
-
-PHP 7.4:
-  extends: .test_template
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:7.4
-
-PHP 8.0:
-  extends: .test_template
-  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.0
 
 PHP 8.1:
   extends: .test_template
@@ -103,6 +94,10 @@ PHP 8.1:
 PHP 8.2:
   extends: .test_template
   image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.2
+
+PHP 8.3:
+  extends: .test_template
+  image: registry.gitlab.com/behat-chrome/docker-chrome-headless:8.3
 
 # This job collects coverage also.
 Report PHPUnit coverage:
