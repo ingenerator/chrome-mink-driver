@@ -3,6 +3,12 @@ Changelog
 
 ## Unreleased
 
+* Update to current dev version of 2.10.0:
+  - Remove fallback behaviours for switching to windows that don't exist (#158, !193)
+  - Tests run against PHP versions 8.1 to 8.3 (#153, !195)
+  - Fix broken key methods (#156)
+  - Fix closing of websockets (!189)
+
 ## 2.9.4.2 (CUSTOM INGENERATOR RELEASE) (2024-10-17)
 
 * Some minor connection enhancements #19
