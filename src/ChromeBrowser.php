@@ -3,7 +3,7 @@
 namespace DMore\ChromeDriver;
 
 use Behat\Mink\Exception\DriverException;
-use WebSocket\ConnectionException;
+use WebSocket\Exception\Exception as WebsocketException;
 
 class ChromeBrowser extends DevToolsConnection
 {
@@ -122,7 +122,7 @@ class ChromeBrowser extends DevToolsConnection
     /**
      * Close the session.
      *
-     * @throws ConnectionException
+     * @throws WebsocketException
      */
     public function close(): void
     {

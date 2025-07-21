@@ -3,7 +3,7 @@
 namespace DMore\ChromeDriverTests;
 
 use DMore\ChromeDriver\ChromeDriver;
-use WebSocket\TimeoutException;
+use WebSocket\Exception\ConnectionTimeoutException;
 
 /**
  * Note that the majority of driver test coverage is provided via minkphp/driver-testsuite.
@@ -40,7 +40,7 @@ class ChromeDriverConnectionTest extends ChromeDriverTestBase
         $this->driver->evaluateScript($script);
 
         // Content read is necessary to trigger timeout.
-        $this->expectException(TimeoutException::class);
+        $this->expectException(ConnectionTimeoutException::class);
         $this->driver->getContent();
     }
 }
