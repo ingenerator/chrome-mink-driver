@@ -145,6 +145,7 @@ class ChromeDriver extends CoreDriver
         }
 
         if (isset($this->options['validateCertificate']) && $this->options['validateCertificate'] === false) {
+            $this->page->send('Security.enable');
             $this->page->send('Security.setIgnoreCertificateErrors', ['ignore' => true]);
         }
     }
@@ -240,10 +241,8 @@ class ChromeDriver extends CoreDriver
         }
         $this->switchToWindow($this->main_window);
         $this->page->reset();
-        if ($this->request_headers !== []) {
-            $this->request_headers = [];
-            $this->sendRequestHeaders();
-        }
+        $this->request_headers = [];
+        $this->sendRequestHeaders();
     }
 
     /**
