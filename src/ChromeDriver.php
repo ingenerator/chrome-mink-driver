@@ -7,7 +7,7 @@ use Behat\Mink\Exception\DriverException;
 use Behat\Mink\Exception\ElementNotFoundException;
 use Behat\Mink\KeyModifier;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use WebSocket\ConnectionException;
+use WebSocket\Exception\Exception as WebsocketException;
 
 class ChromeDriver extends CoreDriver
 {
@@ -192,7 +192,7 @@ class ChromeDriver extends CoreDriver
                 $this->page->close();
             }
             $this->browser->close();
-        } catch (ConnectionException $exception) {
+        } catch (WebsocketException $exception) {
         } catch (DriverException $exception) {
         }
 

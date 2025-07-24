@@ -4,7 +4,8 @@ namespace DMore\ChromeDriver;
 
 use Behat\Mink\Exception\DriverException;
 use WebSocket\Client;
-use WebSocket\ConnectionException;
+use WebSocket\Exception\ConnectionTimeoutException;
+use WebSocket\Message\Text;
 
 abstract class DevToolsConnection
 {
@@ -77,11 +78,12 @@ abstract class DevToolsConnection
     public function connect($url = null): void
     {
         $url = $url == null ? $this->url : $url;
-        $options = ['fragment_size' => 2000000]; // Chrome closes the connection if a message is sent in fragments
+        $this->client = new Client($url);
+        // Chrome closes the connection if a message is sent in fragments
+        $this->client->setFrameSize(2000000);
         if (is_numeric($this->socket_timeout) && $this->socket_timeout > 0) {
-            $options['timeout'] = (int)$this->socket_timeout;
+            $this->client->setTimeout($this->socket_timeout);
         }
-        $this->client = new Client($url, $options);
     }
 
     /**
@@ -108,7 +110,7 @@ abstract class DevToolsConnection
             $payload['params'] = $parameters;
         }
 
-        $this->client->send(json_encode($payload));
+        $this->client->text(json_encode($payload));
 
         $data = $this->waitFor(
             function ($data) use ($payload) {
@@ -128,7 +130,7 @@ abstract class DevToolsConnection
      *
      * @param callable $is_ready
      * @return mixed|null
-     * @throws ConnectionException
+     * @throws ConnectionTimeoutException
      * @throws DriverException
      */
     protected function waitFor(callable $is_ready)
@@ -137,7 +139,7 @@ abstract class DevToolsConnection
         while (true) {
             try {
                 $response = $this->client->receive();
-            } catch (ConnectionException $exception) {
+            } catch (ConnectionTimeoutException $exception) {
                 // NB - this may throw a TimeoutException if the socket read times out simply because Chrome has nothing
                 // to report within the specified socket_timeout - e.g. initial server-side document request takes
                 // longer than the timeout, or Chrome is stalled on a window.alert|confirm|prompt or other client-side
@@ -155,7 +157,11 @@ abstract class DevToolsConnection
                 );
             }
 
-            if ($data = json_decode($response, true)) {
+            if (!$response instanceof Text) {
+                throw new DriverException('Unexpected '.$response.' from chrome websocket');
+            }
+
+            if ($data = json_decode($response->getContent(), true, flags: JSON_THROW_ON_ERROR)) {
                 if (array_key_exists('error', $data)) {
                     $message = isset($data['error']['data']) ?
                         $data['error']['message'] . '. ' . $data['error']['data'] : $data['error']['message'];

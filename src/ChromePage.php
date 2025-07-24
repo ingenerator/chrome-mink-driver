@@ -3,10 +3,13 @@
 namespace DMore\ChromeDriver;
 
 use Behat\Mink\Exception\DriverException;
-use WebSocket\ConnectionException;
+use WebSocket\Exception\ConnectionTimeoutException;
+use WebSocket\Exception\Exception as WebsocketException;
 
 class ChromePage extends DevToolsConnection
 {
+    private $frames_loading = [];
+
     /**
      * @var array
      */
@@ -60,7 +63,7 @@ class ChromePage extends DevToolsConnection
      * Visit a new URL.
      *
      * @param $url
-     * @throws ConnectionException
+     * @throws WebsocketException
      * @throws DriverException
      */
     public function visit($url): void
@@ -102,7 +105,7 @@ class ChromePage extends DevToolsConnection
                         return $this->page_ready;
                     }
                 );
-            } catch (ConnectionException $exception) {
+            } catch (ConnectionTimeoutException $exception) {
                 throw new DriverException("Page not loaded");
             }
         }
@@ -112,7 +115,7 @@ class ChromePage extends DevToolsConnection
      * Get the response.
      *
      * @return array|null
-     * @throws ConnectionException
+     * @throws WebsocketException
      * @throws DriverException
      */
     public function getResponse()
@@ -167,7 +170,7 @@ class ChromePage extends DevToolsConnection
     /**
      * Wait for an HTTP response.
      *
-     * @throws ConnectionException
+     * @throws WebsocketException
      * @throws DriverException
      */
     private function waitForHttpResponse()
@@ -222,11 +225,27 @@ class ChromePage extends DevToolsConnection
                     break;
                 case 'Page.frameNavigated':
                 case 'Page.loadEventFired':
-                case 'Page.frameStartedLoading':
                     $this->page_ready = false;
                     break;
-                case 'Page.navigatedWithinDocument':
+
+                case 'Page.frameStartedLoading':
+                    // @todo There are still potential races if a child frame starts loading during pageload and after
+                    //       we've received the event that the page is ready, so it can transition from "not ready" to
+                    //       "ready" in unexpected sequence. It might be better to ignore child frame load entirely...
+                    $this->frames_loading[$data['params']['frameId']] = true;
+                    $this->page_ready = false;
+                    break;
+
                 case 'Page.frameStoppedLoading':
+                    // not sure why we get frameDetached sometimes, but we do, and they mean the frame never fires frameStoppedLoading
+                case 'Page.frameDetached':
+                    unset($this->frames_loading[$data['params']['frameId']]);
+                    if ($this->frames_loading === []) {
+                        $this->page_ready = true;
+                    }
+                    break;
+
+                case 'Page.navigatedWithinDocument':
                     $this->page_ready = true;
                     break;
                 case 'Inspector.targetCrashed':
